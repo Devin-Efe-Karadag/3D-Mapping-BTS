@@ -24,49 +24,34 @@ def run_full_pipeline(images_folder, output_folder):
     obj_file = openmvs_runner.run_openmvs_pipeline(dense_folder, output_folder)
     return obj_file
 
-def run_icp_alignment(mesh1, mesh2, output_dir):
-    """
-    Align mesh2 to mesh1 using ICP and return the path to the aligned mesh2.
-    """
-    icp_log = os.path.join(output_dir, "icp_log.txt")
-    cmd = [
-        CLOUDCOMPARE_CLI, "-SILENT",
-        "-O", mesh1,
-        "-O", mesh2,
-        "-ICP",
-        "-SAVE_MESHES",
-        "-LOG_FILE", icp_log,
-        "-NO_TIMESTAMP"
-    ]
-    print(f"[INFO] Running ICP alignment...")
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode != 0:
-        print(f"[ERROR] ICP alignment failed:\n{result.stderr}")
-        return mesh2, icp_log
-    # Find the aligned mesh filename (CloudCompare usually appends _REGISTERED)
-    registered_mesh = None
-    for fname in os.listdir(output_dir):
-        if fname.endswith("_REGISTERED.obj"):
-            registered_mesh = os.path.join(output_dir, fname)
-    if not registered_mesh:
-        # Fallback: try mesh2 with _REGISTERED appended
-        base, ext = os.path.splitext(mesh2)
-        registered_mesh = base + "_REGISTERED" + ext
-        if not os.path.exists(registered_mesh):
-            registered_mesh = mesh2  # fallback to original
-    print(f"[INFO] ICP alignment complete. Aligned mesh: {registered_mesh}")
-    return registered_mesh, icp_log
-
 def run_cloudcompare(mesh1, mesh2, base_output_dir):
     # Create a unique run folder using timestamp
     run_id = datetime.datetime.now().strftime("run_%Y%m%d_%H%M%S")
     output_dir = os.path.join(base_output_dir, run_id)
     os.makedirs(output_dir, exist_ok=True)
 
-    # Step 1: ICP alignment
-    aligned_mesh2, icp_log = run_icp_alignment(mesh1, mesh2, output_dir)
+    # --- ICP ALIGNMENT ---
+    # Align mesh2 to mesh1 using ICP
+    subprocess.run([
+        CLOUDCOMPARE_CLI, "-SILENT",
+        "-O", mesh1,
+        "-O", mesh2,
+        "-ICP",
+        "-SAVE_MESHES",
+        "-NO_TIMESTAMP"
+    ], capture_output=True, text=True)
+    # The aligned mesh2 will be saved as mesh2_REGISTERED.obj or similar
+    # We need to find the aligned mesh file
+    aligned_mesh2 = None
+    for f in os.listdir(output_dir):
+        if f.endswith('.obj') and 'REGISTERED' in f:
+            aligned_mesh2 = os.path.join(output_dir, f)
+            break
+    if not aligned_mesh2:
+        print(f"[WARNING] Could not find aligned mesh, using original mesh2")
+        aligned_mesh2 = mesh2
 
-    # Step 2: C2C DISTANCE
+    # --- C2C DISTANCE ---
     c2c_csv = os.path.join(output_dir, "cloudcompare_c2c_distances.csv")
     c2c_screenshot = os.path.join(output_dir, "cloudcompare_c2c_screenshot.png")
     c2c_log = os.path.join(output_dir, "cloudcompare_c2c_report.txt")
@@ -83,7 +68,7 @@ def run_cloudcompare(mesh1, mesh2, base_output_dir):
         "-NO_TIMESTAMP"
     ], capture_output=True, text=True)
 
-    # Step 3: C2M DISTANCE (signed)
+    # --- C2M DISTANCE (signed) ---
     c2m_csv = os.path.join(output_dir, "cloudcompare_c2m_distances.csv")
     c2m_screenshot = os.path.join(output_dir, "cloudcompare_c2m_screenshot.png")
     c2m_log = os.path.join(output_dir, "cloudcompare_c2m_report.txt")
@@ -100,7 +85,7 @@ def run_cloudcompare(mesh1, mesh2, base_output_dir):
         "-NO_TIMESTAMP"
     ], capture_output=True, text=True)
 
-    # Step 4: MESH MEASURE (area/volume)
+    # --- MESH MEASURE (area/volume) ---
     mesh1_measure = os.path.join(output_dir, "mesh1_measure.txt")
     mesh2_measure = os.path.join(output_dir, "mesh2_measure.txt")
     subprocess.run([
@@ -117,7 +102,6 @@ def run_cloudcompare(mesh1, mesh2, base_output_dir):
     print(f"  - C2M log: {c2m_log}")
     print(f"  - Mesh1 area/volume: {mesh1_measure}")
     print(f"  - Mesh2 area/volume: {mesh2_measure}")
-    print(f"  - ICP log: {icp_log}")
     return output_dir
 
 def main():

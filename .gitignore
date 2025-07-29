@@ -1,0 +1,6 @@
+*.pyc
+.venv/
+.DS_Store
+Thumbs.db
+data/
+outputs/

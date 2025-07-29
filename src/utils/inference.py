@@ -70,22 +70,6 @@ def generate_pdf_report(run_dir):
             for line in f:
                 pdf.multi_cell(0, 8, line.strip())
         pdf.ln(5)
-    # Add ICP transformation matrix if available
-    icp_log = os.path.join(run_dir, 'icp_log.txt')
-    if os.path.exists(icp_log):
-        pdf.set_font("Arial", size=11)
-        pdf.cell(0, 8, "ICP Alignment Transformation Matrix:", ln=True)
-        with open(icp_log, 'r') as f:
-            found = False
-            for line in f:
-                if 'Transformation matrix' in line or 'Transformation Matrix' in line:
-                    found = True
-                if found:
-                    if line.strip() == '' and found:
-                        break
-                    pdf.set_font("Courier", size=9)
-                    pdf.multi_cell(0, 6, line.rstrip())
-        pdf.ln(5)
     # Add screenshots
     for label, fname in [("C2C Screenshot", 'cloudcompare_c2c_screenshot.png'), ("C2M Screenshot", 'cloudcompare_c2m_screenshot.png')]:
         img_path = os.path.join(run_dir, fname)
