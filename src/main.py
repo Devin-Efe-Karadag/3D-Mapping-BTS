@@ -13,7 +13,13 @@ DATA_DIR = "data"
 OUTPUTS_DIR = "outputs"
 CLOUDCOMPARE_CLI = "cloudcompare"  # or full path if needed
 
-timestamp_image_folders = [os.path.join(DATA_DIR, t, "images") for t in TIMESTAMPS]
+# Ensure we're running from the correct directory (src/)
+if not os.path.exists(DATA_DIR):
+    print(f"[ERROR] Data directory '{DATA_DIR}' not found. Make sure you're running from the src/ directory.")
+    sys.exit(1)
+
+# The actual images are in person-hall/images subdirectory
+timestamp_image_folders = [os.path.join(DATA_DIR, t, "images", "person-hall", "images") for t in TIMESTAMPS]
 timestamp_output_folders = [os.path.join(OUTPUTS_DIR, t) for t in TIMESTAMPS]
 timestamp_meshes = [os.path.join(OUTPUTS_DIR, t, "model.obj") for t in TIMESTAMPS]
 
