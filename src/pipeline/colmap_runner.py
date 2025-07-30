@@ -1,4 +1,3 @@
-# Moved to src/pipeline/colmap_runner.py as part of project restructuring
 import os
 import subprocess
 import sys

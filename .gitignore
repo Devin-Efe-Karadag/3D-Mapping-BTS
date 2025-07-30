@@ -2,6 +2,5 @@
 .venv/
 .DS_Store
 Thumbs.db
-data/timestamp1/images/
-data/timestamp2/images/
+images/
 outputs/
