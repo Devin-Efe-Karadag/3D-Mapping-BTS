@@ -1,2 +1,16 @@
+# Python dependencies
 fpdf
-matplotlib 
+matplotlib
+numpy
+
+# System dependencies (must be installed separately)
+# COLMAP: https://colmap.github.io/install.html
+#   - macOS: brew install colmap
+#   - Ubuntu: sudo apt-get install colmap
+#   - Windows: Download from https://github.com/colmap/colmap/releases
+#   - Or build from source: https://colmap.github.io/install.html#build-from-source
+
+# CloudCompare (for mesh comparison)
+#   - macOS: Download from https://www.danielgm.net/cc/
+#   - Ubuntu: sudo apt-get install cloudcompare
+#   - Windows: Download from https://www.danielgm.net/cc/ 

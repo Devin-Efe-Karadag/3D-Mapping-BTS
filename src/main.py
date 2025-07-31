@@ -1,117 +1,145 @@
-# Moved to src/main.py as part of project restructuring
+"""
+Main Pipeline Runner
+"""
 import os
 import sys
+import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from pipeline import colmap_runner, openmvs_runner
-import subprocess
 import datetime
-from utils.inference import summarize_comparison
+from config import config
+from pipeline.colmap.dense_reconstruction import run_colmap_pipeline_with_dense
+from pipeline.cloudcompare.alignment import run_icp_alignment
+from pipeline.cloudcompare.comparison import run_c2c_comparison, run_c2m_comparison
+from pipeline.cloudcompare.measurement import run_mesh_measurement
+from utils.reporting.summary import summarize_comparison
 
-# Configurable paths (for now, hardcoded)
-TIMESTAMPS = ["timestamp1", "timestamp2"]
-DATA_DIR = "data"
-OUTPUTS_DIR = "outputs"
-CLOUDCOMPARE_CLI = "cloudcompare"  # or full path if needed
+def parse_arguments():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(description='3D Reconstruction Pipeline')
+    
+    # COLMAP parameters
+    parser.add_argument('--max-image-size', type=int, default=1600,
+                       help='Maximum image size for feature extraction (default: 1600)')
+    parser.add_argument('--max-features', type=int, default=2048,
+                       help='Maximum number of features to extract (default: 2048)')
+    parser.add_argument('--max-ratio', type=float, default=0.8,
+                       help='Maximum ratio for feature matching (default: 0.8)')
+    parser.add_argument('--max-distance', type=float, default=0.7,
+                       help='Maximum distance for feature matching (default: 0.7)')
+    parser.add_argument('--min-matches', type=int, default=15,
+                       help='Minimum number of matches for reconstruction (default: 15)')
+    parser.add_argument('--max-iterations', type=int, default=50,
+                       help='Maximum iterations for bundle adjustment (default: 50)')
+    parser.add_argument('--max-refinements', type=int, default=3,
+                       help='Maximum refinements for bundle adjustment (default: 3)')
+    
+    # Dense reconstruction parameters
+    parser.add_argument('--dense-image-size', type=int, default=2000,
+                       help='Maximum image size for dense reconstruction (default: 2000)')
+    parser.add_argument('--window-radius', type=int, default=5,
+                       help='Window radius for dense stereo (default: 5)')
+    parser.add_argument('--window-step', type=int, default=2,
+                       help='Window step for dense stereo (default: 2)')
+    
+    # Pipeline options
+    parser.add_argument('--timestamps', nargs='+', default=['timestamp1', 'timestamp2'],
+                       help='Timestamp folders to process (default: timestamp1 timestamp2)')
+    parser.add_argument('--skip-comparison', action='store_true',
+                       help='Skip CloudCompare comparison step')
+    parser.add_argument('--skip-report', action='store_true',
+                       help='Skip PDF report generation')
+    
+    return parser.parse_args()
 
-# Ensure we're running from the correct directory (src/)
-if not os.path.exists(DATA_DIR):
-    print(f"[ERROR] Data directory '{DATA_DIR}' not found. Make sure you're running from the src/ directory.")
+# Validate setup before starting
+print("Validating setup...")
+errors, warnings = config.validate_setup()
+
+if errors:
+    print("Setup validation failed:")
+    for error in errors:
+        print(f"  {error}")
     sys.exit(1)
 
-# Images are directly in timestamp/images/
-timestamp_image_folders = [os.path.join(DATA_DIR, t, "images") for t in TIMESTAMPS]
-timestamp_output_folders = [os.path.join(OUTPUTS_DIR, t) for t in TIMESTAMPS]
-timestamp_meshes = [os.path.join(OUTPUTS_DIR, t, "model.obj") for t in TIMESTAMPS]
+if warnings:
+    print("Setup warnings:")
+    for warning in warnings:
+        print(f"  {warning}")
+    print()
+
+# Parse command line arguments
+args = parse_arguments()
+
+# Update config with command line arguments
+config.timestamps = args.timestamps
+config.colmap_params = {
+    'max_image_size': args.max_image_size,
+    'max_features': args.max_features,
+    'max_ratio': args.max_ratio,
+    'max_distance': args.max_distance,
+    'min_matches': args.min_matches,
+    'max_iterations': args.max_iterations,
+    'max_refinements': args.max_refinements,
+    'dense_image_size': args.dense_image_size,
+    'window_radius': args.window_radius,
+    'window_step': args.window_step
+}
+
+# Print current configuration
+config.print_setup_info()
+print("COLMAP Parameters:")
+for key, value in config.colmap_params.items():
+    print(f"  {key}: {value}")
+print()
+
+# Create unique run folders for each execution
+run_id = datetime.datetime.now().strftime("run_%Y%m%d_%H%M%S")
+
+# Generate paths using config
+timestamp_image_folders = [config.get_data_path(t) for t in config.timestamps]
+timestamp_output_folders = [config.get_output_path(t, run_id) for t in config.timestamps]
+timestamp_meshes = [config.get_mesh_path(t, run_id) for t in config.timestamps]
 
 def run_full_pipeline(images_folder, output_folder):
-    # Run COLMAP pipeline
-    dense_folder = colmap_runner.run_colmap_pipeline(images_folder, output_folder)
-    # Run OpenMVS pipeline
-    obj_file = openmvs_runner.run_openmvs_pipeline(dense_folder, output_folder)
+    """Run COLMAP pipeline (including dense reconstruction)"""
+    obj_file = run_colmap_pipeline_with_dense(images_folder, output_folder)
     return obj_file
 
-def run_cloudcompare(mesh1, mesh2, base_output_dir):
+def run_cloudcompare_comparison(mesh1, mesh2, base_output_dir):
+    """Run complete CloudCompare comparison pipeline"""
     # Create a unique run folder using timestamp
     run_id = datetime.datetime.now().strftime("run_%Y%m%d_%H%M%S")
     output_dir = os.path.join(base_output_dir, run_id)
     os.makedirs(output_dir, exist_ok=True)
 
-    # --- ICP ALIGNMENT ---
-    # Align mesh2 to mesh1 using ICP
-    subprocess.run([
-        CLOUDCOMPARE_CLI, "-SILENT",
-        "-O", mesh1,
-        "-O", mesh2,
-        "-ICP",
-        "-SAVE_MESHES",
-        "-NO_TIMESTAMP"
-    ], capture_output=True, text=True)
-    # The aligned mesh2 will be saved as mesh2_REGISTERED.obj or similar
-    # We need to find the aligned mesh file
-    aligned_mesh2 = None
-    for f in os.listdir(output_dir):
-        if f.endswith('.obj') and 'REGISTERED' in f:
-            aligned_mesh2 = os.path.join(output_dir, f)
-            break
-    if not aligned_mesh2:
-        print(f"[WARNING] Could not find aligned mesh, using original mesh2")
-        aligned_mesh2 = mesh2
+    print("Starting CloudCompare comparison pipeline")
+    print(f"Output directory: {output_dir}")
 
-    # --- C2C DISTANCE ---
-    c2c_csv = os.path.join(output_dir, "cloudcompare_c2c_distances.csv")
-    c2c_screenshot = os.path.join(output_dir, "cloudcompare_c2c_screenshot.png")
-    c2c_log = os.path.join(output_dir, "cloudcompare_c2c_report.txt")
-    subprocess.run([
-        CLOUDCOMPARE_CLI, "-SILENT",
-        "-O", mesh1,
-        "-O", aligned_mesh2,
-        "-C2C_DIST",
-        "-SF_STATISTICS",
-        "-C_EXPORT_FMT", "CSV",
-        "-C_EXPORT_PATH", c2c_csv,
-        "-SS", c2c_screenshot,
-        "-LOG_FILE", c2c_log,
-        "-NO_TIMESTAMP"
-    ], capture_output=True, text=True)
+    # Step 1: ICP Alignment
+    aligned_mesh2 = run_icp_alignment(mesh1, mesh2, output_dir)
 
-    # --- C2M DISTANCE (signed) ---
-    c2m_csv = os.path.join(output_dir, "cloudcompare_c2m_distances.csv")
-    c2m_screenshot = os.path.join(output_dir, "cloudcompare_c2m_screenshot.png")
-    c2m_log = os.path.join(output_dir, "cloudcompare_c2m_report.txt")
-    subprocess.run([
-        CLOUDCOMPARE_CLI, "-SILENT",
-        "-O", mesh1,
-        "-O", aligned_mesh2,
-        "-C2M_DIST", "-SIGNED",
-        "-SF_STATISTICS",
-        "-C_EXPORT_FMT", "CSV",
-        "-C_EXPORT_PATH", c2m_csv,
-        "-SS", c2m_screenshot,
-        "-LOG_FILE", c2m_log,
-        "-NO_TIMESTAMP"
-    ], capture_output=True, text=True)
+    # Step 2: C2C Comparison
+    c2c_csv, c2c_screenshot, c2c_log = run_c2c_comparison(mesh1, aligned_mesh2, output_dir)
 
-    # --- MESH MEASURE (area/volume) ---
-    mesh1_measure = os.path.join(output_dir, "mesh1_measure.txt")
-    mesh2_measure = os.path.join(output_dir, "mesh2_measure.txt")
-    subprocess.run([
-        CLOUDCOMPARE_CLI, "-SILENT", "-O", mesh1, "-MESH_MEASURE", "-LOG_FILE", mesh1_measure, "-NO_TIMESTAMP"], capture_output=True, text=True)
-    subprocess.run([
-        CLOUDCOMPARE_CLI, "-SILENT", "-O", aligned_mesh2, "-MESH_MEASURE", "-LOG_FILE", mesh2_measure, "-NO_TIMESTAMP"], capture_output=True, text=True)
+    # Step 3: C2M Comparison
+    c2m_csv, c2m_screenshot, c2m_log = run_c2m_comparison(mesh1, aligned_mesh2, output_dir)
 
-    print(f"[INFO] CloudCompare comparison completed. All outputs saved in: {output_dir}")
-    print(f"  - C2C distances CSV: {c2c_csv}")
-    print(f"  - C2C screenshot: {c2c_screenshot}")
-    print(f"  - C2C log: {c2c_log}")
-    print(f"  - C2M distances CSV: {c2m_csv}")
-    print(f"  - C2M screenshot: {c2m_screenshot}")
-    print(f"  - C2M log: {c2m_log}")
-    print(f"  - Mesh1 area/volume: {mesh1_measure}")
-    print(f"  - Mesh2 area/volume: {mesh2_measure}")
+    # Step 4: Mesh Measurements
+    mesh1_measure = run_mesh_measurement(mesh1, output_dir, "mesh1")
+    mesh2_measure = run_mesh_measurement(aligned_mesh2, output_dir, "mesh2")
+
+    print("CloudCompare comparison completed")
+    print(f"All outputs saved in: {output_dir}")
+    
     return output_dir
 
 def main():
-    # Step 1: Run both pipelines in parallel
+    """Main pipeline execution"""
+    print("Starting 3D Reconstruction Pipeline")
+    print("=" * 50)
+    
+    # Step 1: Run both COLMAP pipelines in parallel
+    print("Step 1: Running COLMAP reconstruction pipelines...")
     with ThreadPoolExecutor(max_workers=2) as executor:
         futures = [
             executor.submit(run_full_pipeline, img_folder, out_folder)
@@ -123,13 +151,31 @@ def main():
                 obj_file = future.result()
                 results.append(obj_file)
             except Exception as e:
-                print(f"[FATAL] One of the reconstructions failed: {e}")
+                print(f"FATAL: One of the reconstructions failed: {e}")
                 return
-    # Step 2: Run CloudCompare
-    base_output_dir = os.path.join("outputs", "comparison")
-    run_dir = run_cloudcompare(timestamp_meshes[0], timestamp_meshes[1], base_output_dir)
-    # Step 3: Summarize and interpret results (moved to utils.inference)
-    summarize_comparison(run_dir)
+    
+    if args.skip_comparison:
+        print("Skipping CloudCompare comparison (--skip-comparison flag)")
+        return
+    
+    # Step 2: Run CloudCompare comparison
+    print("Step 2: Running CloudCompare comparison...")
+    base_output_dir = os.path.join(config.outputs_dir, run_id, "comparison")
+    comparison_dir = run_cloudcompare_comparison(timestamp_meshes[0], timestamp_meshes[1], base_output_dir)
+    
+    if args.skip_report:
+        print("Skipping report generation (--skip-report flag)")
+        return
+    
+    # Step 3: Generate summary and report
+    print("Step 3: Generating summary and report...")
+    summarize_comparison(comparison_dir)
+    
+    print("Pipeline completed successfully!")
+    print("COLMAP models created:")
+    for i, mesh in enumerate(timestamp_meshes):
+        print(f"  - Timestamp{i+1}: {mesh}")
+    print(f"CloudCompare comparison completed in: {comparison_dir}")
 
 if __name__ == "__main__":
     main() 
