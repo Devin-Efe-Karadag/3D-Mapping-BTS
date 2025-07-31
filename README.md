@@ -2,6 +2,14 @@
 
 A Python-based pipeline for 3D reconstruction using COLMAP and mesh comparison using CloudCompare.
 
+## ⚠️ Important: CUDA Requirement
+
+**This project requires CUDA support for dense 3D reconstruction.** 
+
+- **Systems without CUDA (like Macs without NVIDIA GPU) will fail early with a clear error message**
+- **For full functionality, you must use a system with NVIDIA GPU and CUDA**
+- The pipeline will automatically detect CUDA availability and stop if not available
+
 ## Quick Start
 
 1. **Clone the repository:**
@@ -174,11 +182,6 @@ COLMAP is required for 3D reconstruction. Install it based on your system:
 brew install colmap
 ```
 
-**Ubuntu/Debian:**
-```bash
-sudo apt-get install colmap
-```
-
 **Windows:**
 Download from [COLMAP releases](https://github.com/colmap/colmap/releases)
 
@@ -191,51 +194,5 @@ CloudCompare is required for mesh comparison. Install it based on your system:
 **macOS:**
 Download from [CloudCompare website](https://www.danielgm.net/cc/)
 
-**Ubuntu/Debian:**
-```bash
-sudo apt-get install cloudcompare
-```
-
 **Windows:**
-Download from [CloudCompare website](https://www.danielgm.net/cc/)
-
-## System Requirements
-
-### CUDA Support
-- **Dense reconstruction requires CUDA support**
-- Systems without CUDA (like Macs) will fail early with a clear error message
-- For full functionality, use a system with NVIDIA GPU and CUDA
-
-### Memory Requirements
-- Minimum 8GB RAM recommended
-- 16GB+ RAM for large datasets
-- SSD storage recommended for faster processing
-
-## Troubleshooting
-
-### "CUDA not available" Error
-- **Cause**: System doesn't have CUDA support
-- **Solution**: Use a system with NVIDIA GPU and CUDA, or modify pipeline for CPU-only dense reconstruction
-
-### "COLMAP command not found"
-- **Cause**: COLMAP not installed
-- **Solution**: Install COLMAP using the instructions above
-
-### "CloudCompare not found"
-- **Cause**: CloudCompare not installed at expected location
-- **Solution**: Install CloudCompare or update the path in `config.py`
-
-### "Data directory not found" Error
-- **Cause**: Running from wrong directory or missing data
-- **Solution**: 
-  1. Make sure you're running from the `src/` directory
-  2. Create the expected data structure: `data/timestamp1/images/`
-
-## Cross-Platform Compatibility
-
-The project is designed to work on:
-- ✅ **Windows** (with proper dependencies installed)
-- ✅ **macOS** (with proper dependencies installed)
-- ✅ **Linux** (with proper dependencies installed)
-
-All paths are automatically detected and configured based on the platform. 
+Download from [CloudCompare website](https://www.danielgm.net/cc/) 
