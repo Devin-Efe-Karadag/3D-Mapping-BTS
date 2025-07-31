@@ -38,10 +38,20 @@ See [COLMAP installation guide](https://colmap.github.io/install.html#build-from
 CloudCompare is required for mesh comparison. Install it based on your system:
 
 **macOS:**
-Download from [CloudCompare website](https://www.danielgm.net/cc/)
+- Download from [CloudCompare website](https://www.danielgm.net/cc/)
+- Install to `/Applications/CloudCompare.app` (default location)
+- Alternative: Install via Homebrew: `brew install cloudcompare`
+
+**Linux:**
+```bash
+sudo apt-get install cloudcompare
+```
 
 **Windows:**
-Download from [CloudCompare website](https://www.danielgm.net/cc/)
+- Download from [CloudCompare website](https://www.danielgm.net/cc/)
+- Install to `C:\Program Files\CloudCompare\` (64-bit) or `C:\Program Files (x86)\CloudCompare\` (32-bit)
+
+**Note:** The pipeline automatically searches for CloudCompare in standard installation locations and system PATH. If you install it elsewhere, make sure it's accessible via the system PATH.
 
 ## Quick Start
 
