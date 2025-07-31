@@ -2,13 +2,13 @@
 
 A Python-based pipeline for 3D reconstruction using COLMAP and mesh comparison using CloudCompare.
 
-## ⚠️ Important: CUDA Requirement
+## ⚠️ CUDA Requirement
 
-**This project requires CUDA support for dense 3D reconstruction.** 
+**This project requires CUDA for dense 3D reconstruction.**
 
-- **Systems without CUDA (like Macs without NVIDIA GPU) will fail early with a clear error message**
-- **For full functionality, you must use a system with NVIDIA GPU and CUDA**
-- The pipeline will automatically detect CUDA availability and stop if not available
+- Systems without CUDA (like Macs without NVIDIA GPU) will fail with a clear error message
+- Use a system with NVIDIA GPU and CUDA for full functionality
+- The pipeline automatically detects CUDA availability
 
 ## Dependencies
 
