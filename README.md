@@ -10,6 +10,39 @@ A Python-based pipeline for 3D reconstruction using COLMAP and mesh comparison u
 - **For full functionality, you must use a system with NVIDIA GPU and CUDA**
 - The pipeline will automatically detect CUDA availability and stop if not available
 
+## Dependencies
+
+### Python Dependencies
+Install these using pip:
+```bash
+pip install -r requirements.txt
+```
+
+### System Dependencies
+
+#### COLMAP
+COLMAP is required for 3D reconstruction. Install it based on your system:
+
+**macOS:**
+```bash
+brew install colmap
+```
+
+**Windows:**
+Download from [COLMAP releases](https://github.com/colmap/colmap/releases)
+
+**From Source:**
+See [COLMAP installation guide](https://colmap.github.io/install.html#build-from-source)
+
+#### CloudCompare
+CloudCompare is required for mesh comparison. Install it based on your system:
+
+**macOS:**
+Download from [CloudCompare website](https://www.danielgm.net/cc/)
+
+**Windows:**
+Download from [CloudCompare website](https://www.danielgm.net/cc/)
+
 ## Quick Start
 
 1. **Clone the repository:**
@@ -30,8 +63,8 @@ pip install -r requirements.txt
 ```
 
 4. **Install system dependencies:**
-   - **COLMAP**: See installation instructions below
-   - **CloudCompare**: See installation instructions below
+   - **COLMAP**: See installation instructions above
+   - **CloudCompare**: See installation instructions above
 
 5. **Run setup validation:**
 ```bash
@@ -162,37 +195,4 @@ outputs/run_YYYYMMDD_HHMMSS/comparison/run_YYYYMMDD_HHMMSS/
 - **Positive area difference**: Surface area increased
 - **Negative area difference**: Surface area decreased
 - **Positive volume difference**: Volume increased
-- **Negative volume difference**: Volume decreased
-
-## Dependencies
-
-### Python Dependencies
-Install these using pip:
-```bash
-pip install -r requirements.txt
-```
-
-### System Dependencies
-
-#### COLMAP
-COLMAP is required for 3D reconstruction. Install it based on your system:
-
-**macOS:**
-```bash
-brew install colmap
-```
-
-**Windows:**
-Download from [COLMAP releases](https://github.com/colmap/colmap/releases)
-
-**From Source:**
-See [COLMAP installation guide](https://colmap.github.io/install.html#build-from-source)
-
-#### CloudCompare
-CloudCompare is required for mesh comparison. Install it based on your system:
-
-**macOS:**
-Download from [CloudCompare website](https://www.danielgm.net/cc/)
-
-**Windows:**
-Download from [CloudCompare website](https://www.danielgm.net/cc/) 
+- **Negative volume difference**: Volume decreased 
