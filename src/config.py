@@ -22,51 +22,13 @@ class Config:
         # Timestamp folders (configurable)
         self.timestamps = ["timestamp1", "timestamp2"]
         
-        # Find CloudCompare executable
-        self.cloudcompare_path = self._find_cloudcompare()
+        # Custom 3D mesh analysis implementation
+        pass
         
         # Find COLMAP executable
         self.colmap_path = self._find_colmap()
     
-    def _find_cloudcompare(self):
-        """Find CloudCompare executable based on platform"""
-        possible_paths = []
-        
-        if self.is_macos:
-            possible_paths = [
-                "/Applications/CloudCompare.app/Contents/MacOS/CloudCompare",
-                "/usr/local/bin/CloudCompare",
-                "/opt/homebrew/bin/CloudCompare"
-            ]
-        elif self.is_linux:
-            possible_paths = [
-                "/usr/bin/cloudcompare",
-                "/usr/local/bin/cloudcompare",
-                "/opt/cloudcompare/bin/cloudcompare"
-            ]
-        elif self.is_windows:
-            possible_paths = [
-                "C:\\Program Files\\CloudCompare\\CloudCompare.exe",
-                "C:\\Program Files (x86)\\CloudCompare\\CloudCompare.exe",
-                "cloudcompare.exe"  # If in PATH
-            ]
-        
-        # Check if CloudCompare is in PATH
-        try:
-            result = subprocess.run(["which", "cloudcompare"] if not self.is_windows else ["where", "cloudcompare"], 
-                                  capture_output=True, text=True)
-            if result.returncode == 0:
-                possible_paths.append(result.stdout.strip())
-        except:
-            pass
-        
-        # Try each possible path
-        for path in possible_paths:
-            if os.path.exists(path):
-                return path
-        
-        # If not found, return None and let the user know
-        return None
+    # Custom 3D mesh analysis implementation - no external dependencies needed
     
     def _find_colmap(self):
         """Find COLMAP executable based on platform"""
@@ -136,17 +98,8 @@ class Config:
         else:
             print(f"COLMAP found at: {self.colmap_path}")
         
-        # Check CloudCompare
-        if not self.cloudcompare_path:
-            errors.append("CloudCompare not found. Please install CloudCompare:")
-            if self.is_macos:
-                errors.append("  Download from https://www.danielgm.net/cc/")
-            elif self.is_linux:
-                errors.append("  sudo apt-get install cloudcompare")
-            elif self.is_windows:
-                errors.append("  Download from https://www.danielgm.net/cc/")
-        else:
-            print(f"CloudCompare found at: {self.cloudcompare_path}")
+        # Custom 3D mesh analysis implementation
+        print("3D Mesh Analysis: Custom Python implementation")
         
         # Check data directories
         for timestamp in self.timestamps:
@@ -182,7 +135,7 @@ class Config:
         print(f"  Outputs directory: {self.outputs_dir}")
         print(f"  Timestamps: {', '.join(self.timestamps)}")
         print(f"  COLMAP: {self.colmap_path or 'NOT FOUND'}")
-        print(f"  CloudCompare: {self.cloudcompare_path or 'NOT FOUND'}")
+        print(f"  3D Mesh Analysis: Custom Python implementation")
 
 # Global config instance
 config = Config() 

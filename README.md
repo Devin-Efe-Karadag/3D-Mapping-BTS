@@ -1,6 +1,6 @@
 # 3D Reconstruction Pipeline
 
-A Python-based pipeline for 3D reconstruction using COLMAP and mesh comparison using CloudCompare.
+A Python-based pipeline for 3D reconstruction using COLMAP and custom 3D mesh analysis.
 
 ## ⚠️ CUDA Requirement
 
@@ -34,24 +34,20 @@ Download from [COLMAP releases](https://github.com/colmap/colmap/releases)
 **From Source:**
 See [COLMAP installation guide](https://colmap.github.io/install.html#build-from-source)
 
-#### CloudCompare
-CloudCompare is required for mesh comparison. Install it based on your system:
+#### Custom 3D Mesh Analysis
+The pipeline includes custom Python implementations for 3D mesh analysis. All functionality is provided through Python libraries:
 
-**macOS:**
-- Download from [CloudCompare website](https://www.danielgm.net/cc/)
-- Install to `/Applications/CloudCompare.app` (default location)
-- Alternative: Install via Homebrew: `brew install cloudcompare`
-
-**Linux:**
+**Required Python packages:**
 ```bash
-sudo apt-get install cloudcompare
+pip install open3d numpy pandas matplotlib scipy scikit-learn
 ```
 
-**Windows:**
-- Download from [CloudCompare website](https://www.danielgm.net/cc/)
-- Install to `C:\Program Files\CloudCompare\` (64-bit) or `C:\Program Files (x86)\CloudCompare\` (32-bit)
-
-**Note:** The pipeline automatically searches for CloudCompare in standard installation locations and system PATH. If you install it elsewhere, make sure it's accessible via the system PATH.
+**Features:**
+- **ICP Alignment**: Iterative Closest Point mesh alignment using Open3D
+- **Cloud-to-Cloud (C2C)**: Point-to-point distance computation between meshes
+- **Cloud-to-Mesh (C2M)**: Signed distance computation with inside/outside detection
+- **Mesh Measurements**: Surface area, volume, and quality metrics calculation
+- **Visualizations**: Distance distribution plots and statistical analysis
 
 ## Quick Start
 
@@ -74,7 +70,7 @@ pip install -r requirements.txt
 
 4. **Install system dependencies:**
    - **COLMAP**: See installation instructions above
-   - **CloudCompare**: See installation instructions above
+   - **Python packages**: `pip install -r requirements.txt`
 
 5. **Run setup validation:**
 ```bash
@@ -82,7 +78,12 @@ cd src
 python setup.py
 ```
 
-6. **Run the pipeline:**
+6. **Test the custom implementations (optional but recommended):**
+```bash
+python test_custom_implementations.py
+```
+
+7. **Run the pipeline:**
 ```bash
 python main.py
 ```
@@ -133,7 +134,7 @@ python main.py --dense-image-size 3000 --window-radius 7 --window-step 3
 | `--window-radius` | 5 | Window radius for dense stereo |
 | `--window-step` | 2 | Window step for dense stereo |
 | `--timestamps` | timestamp1 timestamp2 | Folders to process |
-| `--skip-comparison` | False | Skip CloudCompare comparison |
+| `--skip-comparison` | False | Skip custom 3D mesh comparison |
 | `--skip-report` | False | Skip PDF report generation |
 
 ## Expected Outputs
@@ -157,15 +158,15 @@ outputs/run_YYYYMMDD_HHMMSS/
 - **`dense/`**: Dense point cloud and depth maps
 - **`model.obj`**: Final 3D mesh ready for comparison
 
-### 2. CloudCompare Comparison Outputs
+### 2. Custom 3D Mesh Comparison Outputs
 ```
 outputs/run_YYYYMMDD_HHMMSS/comparison/run_YYYYMMDD_HHMMSS/
-├── cloudcompare_c2c_distances.csv      # Cloud-to-cloud distances
-├── cloudcompare_c2c_screenshot.png     # C2C visualization
-├── cloudcompare_c2c_report.txt         # C2C statistics
-├── cloudcompare_c2m_distances.csv      # Cloud-to-mesh distances
-├── cloudcompare_c2m_screenshot.png     # C2M visualization
-├── cloudcompare_c2m_report.txt         # C2M statistics
+├── custom_c2c_distances.csv            # Cloud-to-cloud distances
+├── custom_c2c_visualization.png        # C2C visualization
+├── custom_c2c_report.txt               # C2C statistics
+├── custom_c2m_distances.csv            # Cloud-to-mesh distances
+├── custom_c2m_visualization.png        # C2M visualization
+├── custom_c2m_report.txt               # C2M statistics
 ├── mesh1_measure.txt                   # Mesh1 area/volume
 ├── mesh2_measure.txt                   # Mesh2 area/volume
 ├── summary.txt                         # Human-readable summary
@@ -180,6 +181,33 @@ outputs/run_YYYYMMDD_HHMMSS/comparison/run_YYYYMMDD_HHMMSS/
 - **Measurements**: Surface area and volume of each mesh
 - **Summary**: Human-readable interpretation of results
 - **PDF Report**: Complete analysis with plots and tables
+
+## Custom 3D Mesh Analysis
+
+The pipeline includes custom Python implementations for 3D mesh analysis:
+
+### Features Implemented
+
+- **ICP Alignment**: Iterative Closest Point algorithm for aligning two 3D meshes
+- **Cloud-to-Cloud (C2C)**: Computes point-to-point distances between corresponding locations on two meshes
+- **Cloud-to-Mesh (C2M)**: Computes signed distances from one mesh to another (positive = outside, negative = inside)
+- **Mesh Measurements**: Calculates surface area, volume, and quality metrics for individual meshes
+- **Visualizations**: Generates distance distribution plots and statistical analysis charts
+
+### Technical Details
+
+- **Open3D**: Used for mesh loading, point cloud operations, and ICP alignment
+- **NumPy**: Numerical computations and statistical analysis
+- **Pandas**: Data export to CSV format
+- **Matplotlib**: Visualization generation (optional dependency)
+
+### Testing
+
+Run the test script to verify all custom implementations work correctly:
+```bash
+cd src
+python test_custom_implementations.py
+```
 
 ## Understanding the Results
 

@@ -4,7 +4,7 @@ Statistics Analysis Module
 import os
 
 def parse_statistics(log_file):
-    """Parse statistics from CloudCompare log files"""
+    """Parse statistics from custom 3D mesh analysis log files"""
     stats = {}
     with open(log_file, 'r') as f:
         for line in f:

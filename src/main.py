@@ -8,9 +8,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import datetime
 from config import config
 from pipeline.colmap.dense_reconstruction import run_colmap_pipeline_with_dense
-from pipeline.cloudcompare.alignment import run_icp_alignment
-from pipeline.cloudcompare.comparison import run_c2c_comparison, run_c2m_comparison
-from pipeline.cloudcompare.measurement import run_mesh_measurement
+from pipeline.mesh_analysis.alignment import run_icp_alignment
+from pipeline.mesh_analysis.comparison import run_c2c_comparison, run_c2m_comparison
+from pipeline.mesh_analysis.measurement import run_mesh_measurement
 from utils.reporting.summary import summarize_comparison
 
 def parse_arguments():
@@ -45,7 +45,7 @@ def parse_arguments():
     parser.add_argument('--timestamps', nargs='+', default=['timestamp1', 'timestamp2'],
                        help='Timestamp folders to process (default: timestamp1 timestamp2)')
     parser.add_argument('--skip-comparison', action='store_true',
-                       help='Skip CloudCompare comparison step')
+                       help='Skip 3D mesh comparison step')
     parser.add_argument('--skip-report', action='store_true',
                        help='Skip PDF report generation')
     
@@ -105,14 +105,14 @@ def run_full_pipeline(images_folder, output_folder):
     obj_file = run_colmap_pipeline_with_dense(images_folder, output_folder)
     return obj_file
 
-def run_cloudcompare_comparison(mesh1, mesh2, base_output_dir):
-    """Run complete CloudCompare comparison pipeline"""
+def run_custom_comparison(mesh1, mesh2, base_output_dir):
+    """Run complete custom 3D mesh comparison pipeline"""
     # Create a unique run folder using timestamp
     run_id = datetime.datetime.now().strftime("run_%Y%m%d_%H%M%S")
     output_dir = os.path.join(base_output_dir, run_id)
     os.makedirs(output_dir, exist_ok=True)
 
-    print("Starting CloudCompare comparison pipeline")
+    print("Starting custom 3D mesh comparison pipeline")
     print(f"Output directory: {output_dir}")
 
     # Step 1: ICP Alignment
@@ -128,7 +128,7 @@ def run_cloudcompare_comparison(mesh1, mesh2, base_output_dir):
     mesh1_measure = run_mesh_measurement(mesh1, output_dir, "mesh1")
     mesh2_measure = run_mesh_measurement(aligned_mesh2, output_dir, "mesh2")
 
-    print("CloudCompare comparison completed")
+    print("Custom 3D mesh comparison completed")
     print(f"All outputs saved in: {output_dir}")
     
     return output_dir
@@ -155,13 +155,13 @@ def main():
                 return
     
     if args.skip_comparison:
-        print("Skipping CloudCompare comparison (--skip-comparison flag)")
+        print("Skipping 3D mesh comparison (--skip-comparison flag)")
         return
     
-    # Step 2: Run CloudCompare comparison
-    print("Step 2: Running CloudCompare comparison...")
+    # Step 2: Run custom 3D mesh comparison
+    print("Step 2: Running custom 3D mesh comparison...")
     base_output_dir = os.path.join(config.outputs_dir, run_id, "comparison")
-    comparison_dir = run_cloudcompare_comparison(timestamp_meshes[0], timestamp_meshes[1], base_output_dir)
+    comparison_dir = run_custom_comparison(timestamp_meshes[0], timestamp_meshes[1], base_output_dir)
     
     if args.skip_report:
         print("Skipping report generation (--skip-report flag)")
@@ -175,7 +175,7 @@ def main():
     print("COLMAP models created:")
     for i, mesh in enumerate(timestamp_meshes):
         print(f"  - Timestamp{i+1}: {mesh}")
-    print(f"CloudCompare comparison completed in: {comparison_dir}")
+    print(f"Custom 3D mesh comparison completed in: {comparison_dir}")
 
 if __name__ == "__main__":
     main() 

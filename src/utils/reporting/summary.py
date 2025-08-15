@@ -7,8 +7,8 @@ from .pdf_generator import generate_pdf_report
 
 def summarize_comparison(run_dir):
     """Parse the comparison outputs and generate a human-readable summary"""
-    c2c_stats = parse_statistics(os.path.join(run_dir, 'cloudcompare_c2c_report.txt'))
-    c2m_stats = parse_statistics(os.path.join(run_dir, 'cloudcompare_c2m_report.txt'))
+    c2c_stats = parse_statistics(os.path.join(run_dir, 'custom_c2c_report.txt'))
+    c2m_stats = parse_statistics(os.path.join(run_dir, 'custom_c2m_report.txt'))
     mesh1_area, mesh1_volume = parse_mesh_measure(os.path.join(run_dir, 'mesh1_measure.txt'))
     mesh2_area, mesh2_volume = parse_mesh_measure(os.path.join(run_dir, 'mesh2_measure.txt'))
     

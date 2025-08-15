@@ -123,7 +123,7 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
     ])
     print(f"[COLMAP] Mesh creation completed")
     
-    # Convert to OBJ format for CloudCompare
+            # Convert to OBJ format for 3D mesh analysis
     obj_file = os.path.join(mesh_folder, "model.obj")
     run_cmd([
         colmap_cmd, "model_converter",

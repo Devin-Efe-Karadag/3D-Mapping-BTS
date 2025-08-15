@@ -76,7 +76,7 @@ src/data/*/mesh/
 *.bin
 *.txt
 
-# CloudCompare specific
+# 3D mesh analysis outputs
 *.cc
 *.ply
 *.obj
