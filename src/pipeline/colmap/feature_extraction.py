@@ -134,8 +134,8 @@ def feature_extraction(database_path, images_folder):
         # Open database with pycolmap
         database = pycolmap.Database(database_path)
         
-        # Get keypoint count
-        keypoint_count = database.get_num_keypoints()
+        # Get keypoint count using correct pycolmap API
+        keypoint_count = database.num_keypoints()
         print(f"[COLMAP] Extracted {keypoint_count} keypoints from {len(image_files)} images")
         
         if keypoint_count == 0:

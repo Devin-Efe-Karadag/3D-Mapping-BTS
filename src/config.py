@@ -129,7 +129,8 @@ class Config:
             # Fallback to pycolmap-based detection if PyTorch not available
             try:
                 import pycolmap
-                return pycolmap.has_cuda()
+                # Check if pycolmap supports CUDA
+                return hasattr(pycolmap, 'has_cuda') and pycolmap.has_cuda()
             except:
                 pass
             return False

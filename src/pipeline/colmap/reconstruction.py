@@ -27,8 +27,7 @@ def mapping(database_path, images_folder, sparse_folder):
             mapper_options=pycolmap.MapperOptions(
                 min_num_matches=min_matches,
                 ba_global_max_num_iterations=max_iterations,
-                ba_global_max_refinements=max_refinements,
-                use_gpu=True  # Enable GPU acceleration for bundle adjustment
+                ba_global_max_refinements=max_refinements
             )
         )
         
@@ -46,8 +45,7 @@ def mapping(database_path, images_folder, sparse_folder):
             mapper_options=pycolmap.MapperOptions(
                 min_num_matches=min_matches,
                 ba_global_max_num_iterations=max_iterations,
-                ba_global_max_refinements=max_refinements,
-                use_gpu=False  # Force CPU reconstruction
+                ba_global_max_refinements=max_refinements
             )
         )
         print(f"[COLMAP] CPU fallback sparse reconstruction completed")
@@ -59,7 +57,7 @@ def model_conversion(sparse_folder):
     # Find the first reconstruction
     reconstructions = pycolmap.Reconstruction(sparse_folder)
     
-    # Export to TXT format
+    # Export to TXT format - use the correct pycolmap API
     reconstructions.export_txt(sparse_folder)
     
     print(f"[COLMAP] Model conversion completed")

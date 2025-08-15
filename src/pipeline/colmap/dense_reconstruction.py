@@ -16,7 +16,7 @@ def check_cuda_availability():
         # Fallback to pycolmap-based detection if PyTorch not available
         try:
             # Check if pycolmap supports CUDA
-            return pycolmap.has_cuda()
+            return hasattr(pycolmap, 'has_cuda') and pycolmap.has_cuda()
         except:
             return False
 
@@ -110,8 +110,7 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
             patch_match_stereo_options=pycolmap.PatchMatchStereoOptions(
                 max_image_size=dense_image_size,
                 window_radius=window_radius,
-                window_step=window_step,
-                gpu_index=0  # Use first GPU
+                window_step=window_step
             )
         )
         
@@ -132,10 +131,7 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
             workspace_path=dense_folder,
             workspace_format="COLMAP",
             input_type="geometric",
-            output_path=os.path.join(fused_folder, "fused.ply"),
-            stereo_fusion_options=pycolmap.StereoFusionOptions(
-                gpu_index=0  # Use first GPU
-            )
+            output_path=os.path.join(fused_folder, "fused.ply")
         )
         print(f"[COLMAP] Dense fusion completed")
         
@@ -150,10 +146,7 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
     try:
         pycolmap.poisson_mesher(
             input_path=os.path.join(fused_folder, "fused.ply"),
-            output_path=os.path.join(mesh_folder, "mesh.ply"),
-            poisson_mesher_options=pycolmap.PoissonMesherOptions(
-                gpu_index=0  # Use first GPU
-            )
+            output_path=os.path.join(mesh_folder, "mesh.ply")
         )
         print(f"[COLMAP] Mesh creation completed")
         
@@ -175,6 +168,7 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
     except ImportError:
         print(f"[COLMAP] trimesh not available, using pycolmap conversion...")
         try:
+            # Use pycolmap to convert PLY to OBJ
             pycolmap.model_converter(
                 input_path=os.path.join(mesh_folder, "mesh.ply"),
                 output_path=obj_file,

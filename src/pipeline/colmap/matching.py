@@ -38,8 +38,6 @@ def sequential_matching(database_path):
                 max_distance=max_distance,
                 cross_check=True,
                 max_num_matches=32768,
-                max_num_trials=10000,
-                min_inlier_ratio=0.25,
                 use_gpu=True  # Enable GPU acceleration
             )
         )
@@ -58,8 +56,6 @@ def sequential_matching(database_path):
                 max_distance=max_distance,
                 cross_check=True,
                 max_num_matches=32768,
-                max_num_trials=10000,
-                min_inlier_ratio=0.25,
                 use_gpu=False  # Force CPU matching
             )
         )
@@ -87,7 +83,6 @@ def robust_sequential_matching(database_path):
                     max_distance=1.0,  # More permissive
                     cross_check=True,
                     max_num_matches=65536,  # Even more matches
-                    max_num_trials=20000,
                     use_gpu=True  # Enable GPU acceleration
                 )
             )
@@ -106,7 +101,6 @@ def robust_sequential_matching(database_path):
                     max_distance=1.0,  # More permissive
                     cross_check=True,
                     max_num_matches=65536,  # Even more matches
-                    max_num_trials=20000,
                     use_gpu=False  # Force CPU matching
                 )
             )
@@ -127,8 +121,6 @@ def spatial_matching(database_path):
                 max_distance=0.7,
                 cross_check=True,
                 max_num_matches=32768,
-                max_num_trials=10000,
-                min_inlier_ratio=0.25,
                 use_gpu=True  # Enable GPU acceleration
             ),
             spatial_options=pycolmap.SpatialMatchingOptions(
@@ -143,19 +135,14 @@ def spatial_matching(database_path):
         print(f"[COLMAP] Falling back to CPU matching...")
         
         # Fallback: CPU matching
-        pycolmap.match_spatial(
+        pycolmap.match_exhaustive(
             database_path=database_path,
             sift_options=pycolmap.SiftMatchingOptions(
                 max_ratio=0.8,
                 max_distance=0.7,
                 cross_check=True,
                 max_num_matches=32768,
-                max_num_trials=10000,
-                min_inlier_ratio=0.25,
                 use_gpu=False  # Force CPU matching
-            ),
-            spatial_options=pycolmap.SpatialMatchingOptions(
-                max_num_neighbors=50
             )
         )
         print(f"[COLMAP] CPU fallback spatial matching completed") 
