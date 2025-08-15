@@ -53,6 +53,10 @@ def parse_arguments():
 
 # Validate setup before starting
 print("Validating setup...")
+
+# Set up cloud environment if needed
+config.setup_cloud_environment()
+
 errors, warnings = config.validate_setup()
 
 if errors:

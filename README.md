@@ -19,6 +19,15 @@ A Python-based pipeline for 3D reconstruction using COLMAP and custom 3D mesh an
 - Falls back to offscreen mode if virtual display fails
 - No manual display configuration needed
 
+## ☁️ Cloud Environment Support
+
+**The pipeline automatically detects and adapts to cloud environments (Google Colab, etc.):**
+
+- **Automatic detection**: Recognizes `/content/`, `/tmp/`, `/workspace/` paths
+- **Path adaptation**: Uses current working directory instead of src directory
+- **Directory creation**: Automatically creates required data structure
+- **Cross-platform**: Works on both local and cloud systems
+
 ## Dependencies
 
 ### Python Dependencies

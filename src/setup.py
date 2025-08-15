@@ -14,6 +14,10 @@ def main():
     config.print_setup_info()
     print()
     
+    # Set up cloud environment if needed
+    config.setup_cloud_environment()
+    print()
+    
     # Validate setup
     print("Validating setup...")
     errors, warnings = config.validate_setup()

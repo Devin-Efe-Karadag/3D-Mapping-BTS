@@ -22,6 +22,9 @@ class Config:
         # Get the directory where this config file is located (src directory)
         self.src_dir = os.path.dirname(os.path.abspath(__file__))
         
+        # Detect if we're in a cloud environment (Colab, etc.)
+        self.is_cloud = self._detect_cloud_environment()
+        
         # Timestamp folders (configurable)
         self.timestamps = ["timestamp1", "timestamp2"]
         
@@ -30,6 +33,22 @@ class Config:
         
         # Find COLMAP executable
         self.colmap_path = self._find_colmap()
+    
+    def _detect_cloud_environment(self):
+        """Detect if we're running in a cloud environment (Colab, etc.)"""
+        # Check for common cloud environment indicators
+        cloud_indicators = [
+            '/content/',  # Google Colab
+            '/tmp/',      # Temporary cloud environments
+            '/home/notebook/',  # Some cloud platforms
+            '/workspace/',  # Gitpod, etc.
+        ]
+        
+        current_path = os.getcwd()
+        for indicator in cloud_indicators:
+            if indicator in current_path:
+                return True
+        return False
     
     # Custom 3D mesh analysis implementation - no external dependencies needed
     
@@ -74,15 +93,30 @@ class Config:
     
     def get_data_path(self, timestamp):
         """Get path to data directory for a specific timestamp"""
-        return os.path.join(self.src_dir, self.data_dir, timestamp, "images")
+        if self.is_cloud:
+            # In cloud environments, use current working directory
+            return os.path.join(os.getcwd(), self.data_dir, timestamp, "images")
+        else:
+            # In local environments, use src directory
+            return os.path.join(self.src_dir, self.data_dir, timestamp, "images")
     
     def get_output_path(self, timestamp, run_id):
         """Get path to output directory for a specific timestamp and run"""
-        return os.path.join(self.src_dir, self.outputs_dir, run_id, timestamp)
+        if self.is_cloud:
+            # In cloud environments, use current working directory
+            return os.path.join(os.getcwd(), self.outputs_dir, run_id, timestamp)
+        else:
+            # In local environments, use src directory
+            return os.path.join(self.src_dir, self.outputs_dir, run_id, timestamp)
     
     def get_mesh_path(self, timestamp, run_id):
         """Get expected mesh file path for a specific timestamp and run"""
-        return os.path.join(self.src_dir, self.outputs_dir, run_id, timestamp, "model.obj")
+        if self.is_cloud:
+            # In cloud environments, use current working directory
+            return os.path.join(os.getcwd(), self.outputs_dir, run_id, timestamp, "model.obj")
+        else:
+            # In local environments, use src directory
+            return os.path.join(self.src_dir, self.outputs_dir, run_id, timestamp, "model.obj")
     
     def validate_setup(self):
         """Validate that all required dependencies are available"""
@@ -112,9 +146,18 @@ class Config:
                 warnings.append(f"  Expected structure: {self.data_dir}/{timestamp}/images/")
         
         # Check if running from correct directory
-        if not os.path.exists(os.path.join(self.src_dir, self.data_dir)):
-            errors.append(f"Data directory '{os.path.join(self.src_dir, self.data_dir)}' not found.")
-            errors.append("Make sure the data directory exists in the src/ folder.")
+        if self.is_cloud:
+            # In cloud environments, check current working directory
+            data_path = os.path.join(os.getcwd(), self.data_dir)
+            if not os.path.exists(data_path):
+                errors.append(f"Data directory '{data_path}' not found.")
+                errors.append("Make sure the data directory exists in the current working directory.")
+        else:
+            # In local environments, check src directory
+            data_path = os.path.join(self.src_dir, self.data_dir)
+            if not os.path.exists(data_path):
+                errors.append(f"Data directory '{data_path}' not found.")
+                errors.append("Make sure the data directory exists in the src/ folder.")
         
         return errors, warnings
     
@@ -140,12 +183,41 @@ class Config:
         """Print current configuration"""
         print("Configuration:")
         print(f"  Platform: {self.system}")
+        print(f"  Environment: {'Cloud' if self.is_cloud else 'Local'}")
         print(f"  Source directory: {self.src_dir}")
-        print(f"  Data directory: {os.path.join(self.src_dir, self.data_dir)}")
-        print(f"  Outputs directory: {os.path.join(self.src_dir, self.outputs_dir)}")
+        
+        if self.is_cloud:
+            print(f"  Data directory: {os.path.join(os.getcwd(), self.data_dir)}")
+            print(f"  Outputs directory: {os.path.join(os.getcwd(), self.outputs_dir)}")
+        else:
+            print(f"  Data directory: {os.path.join(self.src_dir, self.data_dir)}")
+            print(f"  Outputs directory: {os.path.join(self.src_dir, self.outputs_dir)}")
+            
         print(f"  Timestamps: {', '.join(self.timestamps)}")
         print(f"  COLMAP: {self.colmap_path or 'NOT FOUND'}")
         print(f"  3D Mesh Analysis: Custom Python implementation")
+    
+    def setup_cloud_environment(self):
+        """Set up directory structure for cloud environments"""
+        if not self.is_cloud:
+            return
+            
+        print(f"[SETUP] Setting up cloud environment...")
+        
+        # Create data directory structure if it doesn't exist
+        data_dir = os.path.join(os.getcwd(), self.data_dir)
+        if not os.path.exists(data_dir):
+            print(f"[SETUP] Creating data directory: {data_dir}")
+            os.makedirs(data_dir, exist_ok=True)
+            
+        # Create timestamp directories
+        for timestamp in self.timestamps:
+            timestamp_dir = os.path.join(data_dir, timestamp, "images")
+            if not os.path.exists(timestamp_dir):
+                print(f"[SETUP] Creating timestamp directory: {timestamp_dir}")
+                os.makedirs(timestamp_dir, exist_ok=True)
+                
+        print(f"[SETUP] Cloud environment setup complete")
 
 # Global config instance
 config = Config() 
