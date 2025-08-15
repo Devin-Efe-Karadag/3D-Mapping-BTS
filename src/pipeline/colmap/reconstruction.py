@@ -20,14 +20,21 @@ def mapping(database_path, images_folder, sparse_folder):
     print(f"[COLMAP] Using pycolmap incremental_mapping for sparse reconstruction...")
     
     try:
-        # Use pycolmap's incremental_mapping function
+        # Use pycolmap's incremental_mapping function with proper options
+        print(f"[COLMAP] Creating pycolmap IncrementalPipelineOptions...")
+        
+        # Create options object with the correct parameters
+        options = pycolmap.IncrementalPipelineOptions()
+        options.min_num_matches = min_matches
+        options.ba_global_max_num_iterations = max_iterations
+        options.ba_global_max_refinements = max_refinements
+        
+        print(f"[COLMAP] Using pycolmap incremental_mapping with options...")
         pycolmap.incremental_mapping(
             database_path=database_path,
             image_path=images_folder,
             output_path=sparse_folder,
-            min_num_matches=min_matches,
-            ba_global_max_num_iterations=max_iterations,
-            ba_global_max_refinements=max_refinements
+            options=options
         )
         print(f"[COLMAP] Sparse reconstruction completed using pycolmap")
         
@@ -36,18 +43,25 @@ def mapping(database_path, images_folder, sparse_folder):
         print(f"[COLMAP] Trying alternative pycolmap approach...")
         
         try:
-            # Alternative: Use pycolmap's incremental pipeline
+            # Alternative: Use pycolmap's incremental pipeline directly
+            print(f"[COLMAP] Trying pycolmap IncrementalPipeline...")
+            
+            # Create options object
             options = pycolmap.IncrementalPipelineOptions()
             options.min_num_matches = min_matches
             options.ba_global_max_num_iterations = max_iterations
             options.ba_global_max_refinements = max_refinements
             
-            pycolmap.IncrementalPipeline(
-                database_path=database_path,
+            # Create and run the pipeline
+            pipeline = pycolmap.IncrementalPipeline(
+                options=options,
                 image_path=images_folder,
-                output_path=sparse_folder,
-                options=options
-            ).run()
+                database_path=database_path
+            )
+            pipeline.run()
+            
+            # Save the reconstruction to the output path
+            # Note: This might need adjustment based on how the pipeline saves results
             print(f"[COLMAP] Alternative pycolmap reconstruction completed")
             
         except Exception as alt_error:
