@@ -107,7 +107,7 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
         pycolmap.patch_match_stereo(
             workspace_path=dense_folder,
             workspace_format="COLMAP",
-            patch_match_stereo_options=pycolmap.PatchMatchStereoOptions(
+            patch_match_stereo_options=pycolmap.PatchMatchOptions(
                 max_image_size=dense_image_size,
                 window_radius=window_radius,
                 window_step=window_step
