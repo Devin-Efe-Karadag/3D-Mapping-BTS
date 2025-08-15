@@ -38,19 +38,14 @@ pip install -r requirements.txt
 
 ### System Dependencies
 
-#### COLMAP
-COLMAP is required for 3D reconstruction. Install it based on your system:
+#### pycolmap
+pycolmap is the Python library for 3D reconstruction. Install it via pip:
 
-**macOS:**
 ```bash
-brew install colmap
+pip install pycolmap
 ```
 
-**Windows:**
-Download from [COLMAP releases](https://github.com/colmap/colmap/releases)
-
-**From Source:**
-See [COLMAP installation guide](https://colmap.github.io/install.html#build-from-source)
+**Note:** pycolmap automatically handles COLMAP backend installation and CUDA support.
 
 #### Custom 3D Mesh Analysis
 The pipeline includes custom Python implementations for 3D mesh analysis. All functionality is provided through Python libraries:
@@ -86,9 +81,9 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. **Install system dependencies:**
-   - **COLMAP**: See installation instructions above
-   - **Python packages**: `pip install -r requirements.txt`
+4. **Install Python dependencies:**
+   - **pycolmap**: `pip install pycolmap`
+   - **Other packages**: `pip install -r requirements.txt`
 
 5. **Run setup validation:**
 ```bash

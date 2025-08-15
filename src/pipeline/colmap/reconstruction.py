@@ -1,28 +1,15 @@
 """
-COLMAP Sparse Reconstruction Module
+COLMAP Sparse Reconstruction Module using pycolmap
 """
 import os
-import subprocess
 import sys
-import multiprocessing
+import pycolmap
 from config import config
 
-def run_cmd(cmd, cwd=None):
-    """Run a command and handle errors"""
-    print(f"[COLMAP] Running: {' '.join(cmd)}")
-    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
-    if result.returncode != 0:
-        print(f"[COLMAP][ERROR] Command failed: {' '.join(cmd)}\n{result.stderr}")
-        sys.exit(result.returncode)
-    print(f"[COLMAP] Command completed successfully")
-    return result
-
 def mapping(database_path, images_folder, sparse_folder):
-    """Perform sparse reconstruction mapping"""
+    """Perform sparse reconstruction mapping using pycolmap"""
     print(f"[COLMAP] Starting sparse reconstruction")
     os.makedirs(sparse_folder, exist_ok=True)
-    # Use config for COLMAP path
-    colmap_cmd = config.colmap_path or "colmap"
     
     # Get configurable parameters
     min_matches = getattr(config, 'colmap_params', {}).get('min_matches', 15)
@@ -30,44 +17,78 @@ def mapping(database_path, images_folder, sparse_folder):
     max_refinements = getattr(config, 'colmap_params', {}).get('max_refinements', 3)
     
     # Optimized mapping with GPU acceleration
-    run_cmd([
-        colmap_cmd, "mapper",
-        "--database_path", database_path,
-        "--image_path", images_folder,
-        "--output_path", sparse_folder,
-        "--Mapper.ba_global_max_num_iterations", str(max_iterations),
-        "--Mapper.ba_global_max_refinements", str(max_refinements),
-        "--Mapper.min_num_matches", str(min_matches),
-        "--Mapper.use_gpu", "1"  # Enable GPU acceleration for bundle adjustment
-    ])
-    print(f"[COLMAP] Sparse reconstruction completed")
+    try:
+        print(f"[COLMAP] Starting pycolmap sparse reconstruction...")
+        
+        pycolmap.pipeline.run_mapper(
+            database_path=database_path,
+            image_path=images_folder,
+            output_path=sparse_folder,
+            mapper_options=pycolmap.MapperOptions(
+                min_num_matches=min_matches,
+                ba_global_max_num_iterations=max_iterations,
+                ba_global_max_refinements=max_refinements,
+                use_gpu=True  # Enable GPU acceleration for bundle adjustment
+            )
+        )
+        
+        print(f"[COLMAP] Sparse reconstruction completed")
+        
+    except Exception as gpu_error:
+        print(f"[COLMAP] GPU reconstruction failed: {gpu_error}")
+        print(f"[COLMAP] Falling back to CPU reconstruction...")
+        
+        # Fallback: CPU reconstruction
+        pycolmap.pipeline.run_mapper(
+            database_path=database_path,
+            image_path=images_folder,
+            output_path=sparse_folder,
+            mapper_options=pycolmap.MapperOptions(
+                min_num_matches=min_matches,
+                ba_global_max_num_iterations=max_iterations,
+                ba_global_max_refinements=max_refinements,
+                use_gpu=False  # Force CPU reconstruction
+            )
+        )
+        print(f"[COLMAP] CPU fallback sparse reconstruction completed")
 
 def model_conversion(sparse_folder):
-    """Convert model to TXT format"""
+    """Convert model to TXT format using pycolmap"""
     print(f"[COLMAP] Converting model to TXT format")
-    # Use config for COLMAP path
-    colmap_cmd = config.colmap_path or "colmap"
-    run_cmd([
-        colmap_cmd, "model_converter",
-        "--input_path", os.path.join(sparse_folder, "0"),
-        "--output_path", sparse_folder,
-        "--output_type", "TXT"
-        # Note: model_converter doesn't support GPU acceleration
-    ])
+    
+    # Find the first reconstruction
+    reconstructions = pycolmap.Reconstruction(sparse_folder)
+    
+    # Export to TXT format
+    reconstructions.export_txt(sparse_folder)
+    
     print(f"[COLMAP] Model conversion completed")
 
 def image_undistortion(images_folder, sparse_folder, dense_folder):
-    """Undistort images for dense reconstruction"""
+    """Undistort images for dense reconstruction using pycolmap"""
     print(f"[COLMAP] Starting image undistortion")
     os.makedirs(dense_folder, exist_ok=True)
-    # Use config for COLMAP path
-    colmap_cmd = config.colmap_path or "colmap"
-    run_cmd([
-        colmap_cmd, "image_undistorter",
-        "--image_path", images_folder,
-        "--input_path", os.path.join(sparse_folder, "0"),
-        "--output_path", dense_folder,
-        "--output_type", "COLMAP",
-        "--ImageUndistorter.gpu_index", "0"  # Use first GPU
-    ])
-    print(f"[COLMAP] Image undistortion completed") 
+    
+    try:
+        print(f"[COLMAP] Starting pycolmap image undistortion...")
+        
+        pycolmap.undistort_images(
+            image_path=images_folder,
+            input_path=sparse_folder,
+            output_path=dense_folder,
+            output_type="COLMAP"
+        )
+        
+        print(f"[COLMAP] Image undistortion completed")
+        
+    except Exception as e:
+        print(f"[COLMAP] Image undistortion failed: {e}")
+        print(f"[COLMAP] Continuing without undistortion...")
+        # Copy original images to dense folder as fallback
+        import shutil
+        for img_file in os.listdir(images_folder):
+            if img_file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif')):
+                src = os.path.join(images_folder, img_file)
+                dst = os.path.join(dense_folder, img_file)
+                shutil.copy2(src, dst)
+        print(f"[COLMAP] Copied original images as fallback") 

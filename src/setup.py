@@ -41,18 +41,15 @@ def main():
     
     # Check CUDA availability
     print("Checking CUDA availability...")
-    if config.colmap_path:
-        try:
-            result = config._check_cuda_availability()
-            if result:
-                print("CUDA is available - full dense reconstruction will work")
-            else:
-                print("CUDA not available - dense reconstruction will fail")
-                print("   This is expected on Mac systems without NVIDIA GPU")
-        except Exception as e:
-            print(f"Could not check CUDA availability: {e}")
-    else:
-        print("COLMAP not found - cannot check CUDA availability")
+    try:
+        result = config._check_cuda_availability()
+        if result:
+            print("CUDA is available - full dense reconstruction will work")
+        else:
+            print("CUDA not available - dense reconstruction will fail")
+            print("   This is expected on Mac systems without NVIDIA GPU")
+    except Exception as e:
+        print(f"Could not check CUDA availability: {e}")
     
     print()
     print("Setup complete! You can now run:")
