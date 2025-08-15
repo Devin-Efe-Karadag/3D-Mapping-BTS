@@ -114,13 +114,13 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
     
     # Import sparse reconstruction functions
     from .feature_extraction import feature_extraction
-    from .matching import sequential_matching, spatial_matching
+    from .matching import robust_sequential_matching, spatial_matching
     from .reconstruction import mapping, model_conversion, image_undistortion
     from .mesh_creation import run_colmap_pipeline
     
     # Standard COLMAP pipeline
     feature_extraction(database_path, images_folder)
-    sequential_matching(database_path)
+    robust_sequential_matching(database_path)
     spatial_matching(database_path)
     mapping(database_path, images_folder, sparse_folder)
     model_conversion(sparse_folder)
