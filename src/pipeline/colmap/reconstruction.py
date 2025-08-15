@@ -247,9 +247,9 @@ def image_undistortion(images_folder, sparse_folder, dense_folder):
         
         # Try to use pycolmap's undistort_images function
         pycolmap.undistort_images(
-            image_path=images_folder,
-            input_path=sparse_folder,
             output_path=dense_folder,
+            input_path=sparse_folder,
+            image_path=images_folder,
             output_type="COLMAP"
         )
         

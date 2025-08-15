@@ -107,7 +107,7 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
         pycolmap.patch_match_stereo(
             workspace_path=dense_folder,
             workspace_format="COLMAP",
-            patch_match_stereo_options=pycolmap.PatchMatchOptions(
+            options=pycolmap.PatchMatchOptions(
                 max_image_size=dense_image_size,
                 window_radius=window_radius,
                 window_step=window_step
@@ -128,10 +128,10 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
     
     try:
         pycolmap.stereo_fusion(
+            output_path=os.path.join(fused_folder, "fused.ply"),
             workspace_path=dense_folder,
             workspace_format="COLMAP",
-            input_type="geometric",
-            output_path=os.path.join(fused_folder, "fused.ply")
+            input_type="geometric"
         )
         print(f"[COLMAP] Dense fusion completed")
         
