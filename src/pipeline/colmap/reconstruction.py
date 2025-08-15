@@ -16,69 +16,121 @@ def mapping(database_path, images_folder, sparse_folder):
     max_iterations = getattr(config, 'colmap_params', {}).get('max_iterations', 50)
     max_refinements = getattr(config, 'colmap_params', {}).get('max_refinements', 3)
     
-    # Since pycolmap.mapper doesn't exist, use subprocess directly
-    print(f"[COLMAP] Using subprocess for sparse reconstruction...")
-    
-    import subprocess
-    colmap_cmd = "colmap"
+    # Use pycolmap's incremental_mapping function
+    print(f"[COLMAP] Using pycolmap incremental_mapping for sparse reconstruction...")
     
     try:
-        subprocess.run([
-            colmap_cmd, "mapper",
-            "--database_path", database_path,
-            "--image_path", images_folder,
-            "--output_path", sparse_folder,
-            "--Mapper.min_num_matches", str(min_matches),
-            "--Mapper.ba_global_max_num_iterations", str(max_iterations),
-            "--Mapper.ba_global_max_refinements", str(max_refinements)
-        ], check=True, capture_output=True, text=True)
-        print(f"[COLMAP] Sparse reconstruction completed using subprocess")
+        # Use pycolmap's incremental_mapping function
+        pycolmap.incremental_mapping(
+            database_path=database_path,
+            image_path=images_folder,
+            output_path=sparse_folder,
+            min_num_matches=min_matches,
+            ba_global_max_num_iterations=max_iterations,
+            ba_global_max_refinements=max_refinements
+        )
+        print(f"[COLMAP] Sparse reconstruction completed using pycolmap")
         
-    except subprocess.CalledProcessError as e:
-        print(f"[COLMAP] Subprocess reconstruction failed: {e}")
-        print(f"[COLMAP] Error output: {e.stderr}")
-        raise RuntimeError(f"COLMAP reconstruction failed: {e}")
-    except FileNotFoundError:
-        print(f"[COLMAP] COLMAP executable not found in PATH")
-        raise RuntimeError("COLMAP executable not found. Please install COLMAP or add it to PATH")
     except Exception as e:
-        print(f"[COLMAP] Unexpected error during reconstruction: {e}")
-        raise RuntimeError(f"Unexpected error during reconstruction: {e}")
+        print(f"[COLMAP] pycolmap incremental_mapping failed: {e}")
+        print(f"[COLMAP] Trying alternative pycolmap approach...")
+        
+        try:
+            # Alternative: Use pycolmap's incremental pipeline
+            options = pycolmap.IncrementalPipelineOptions()
+            options.min_num_matches = min_matches
+            options.ba_global_max_num_iterations = max_iterations
+            options.ba_global_max_refinements = max_refinements
+            
+            pycolmap.IncrementalPipeline(
+                database_path=database_path,
+                image_path=images_folder,
+                output_path=sparse_folder,
+                options=options
+            ).run()
+            print(f"[COLMAP] Alternative pycolmap reconstruction completed")
+            
+        except Exception as alt_error:
+            print(f"[COLMAP] Alternative pycolmap approach also failed: {alt_error}")
+            print(f"[COLMAP] Using fallback subprocess method...")
+            
+            # Fallback to subprocess if pycolmap fails
+            import subprocess
+            colmap_cmd = "colmap"
+            
+            try:
+                subprocess.run([
+                    colmap_cmd, "mapper",
+                    "--database_path", database_path,
+                    "--image_path", images_folder,
+                    "--output_path", sparse_folder,
+                    "--Mapper.min_num_matches", str(min_matches),
+                    "--Mapper.ba_global_max_num_iterations", str(max_iterations),
+                    "--Mapper.ba_global_max_refinements", str(max_refinements)
+                ], check=True, capture_output=True, text=True)
+                print(f"[COLMAP] Subprocess fallback reconstruction completed")
+            except Exception as sub_error:
+                print(f"[COLMAP] All reconstruction methods failed: {sub_error}")
+                raise RuntimeError("Could not perform sparse reconstruction with any method")
 
 def model_conversion(sparse_folder):
     """Convert model to TXT format using pycolmap"""
     print(f"[COLMAP] Converting model to TXT format")
     
-    # Since pycolmap.model_converter doesn't exist, use subprocess directly
-    import subprocess
-    colmap_cmd = "colmap"
-    
     try:
+        # Use pycolmap's Reconstruction class to load and export
+        print(f"[COLMAP] Using pycolmap Reconstruction class for model conversion...")
+        
         # Find the first reconstruction folder
         reconstruction_folders = [f for f in os.listdir(sparse_folder) if os.path.isdir(os.path.join(sparse_folder, f))]
         if reconstruction_folders:
             input_path = os.path.join(sparse_folder, reconstruction_folders[0])
-            subprocess.run([
-                colmap_cmd, "model_converter",
-                "--input_path", input_path,
-                "--output_path", sparse_folder,
-                "--output_type", "TXT"
-            ], check=True, capture_output=True, text=True)
-            print(f"[COLMAP] Model conversion completed using subprocess")
+            
+            # Load reconstruction using pycolmap
+            reconstruction = pycolmap.Reconstruction(input_path)
+            
+            # Export to TXT format
+            reconstruction.export_txt(sparse_folder)
+            print(f"[COLMAP] Model conversion completed using pycolmap")
+            
         else:
             print(f"[COLMAP] No reconstruction folders found in {sparse_folder}")
             print(f"[COLMAP] Model conversion skipped - no reconstruction to convert")
             
-    except subprocess.CalledProcessError as e:
-        print(f"[COLMAP] Subprocess model conversion failed: {e}")
-        print(f"[COLMAP] Error output: {e.stderr}")
-        print(f"[COLMAP] Model conversion failed - continuing without TXT export")
-    except FileNotFoundError:
-        print(f"[COLMAP] COLMAP executable not found in PATH")
-        print(f"[COLMAP] Model conversion failed - continuing without TXT export")
     except Exception as e:
-        print(f"[COLMAP] Unexpected error during model conversion: {e}")
-        print(f"[COLMAP] Model conversion failed - continuing without TXT export")
+        print(f"[COLMAP] pycolmap model conversion failed: {e}")
+        print(f"[COLMAP] Using fallback subprocess method...")
+        
+        # Fallback to subprocess
+        import subprocess
+        colmap_cmd = "colmap"
+        
+        try:
+            # Find the first reconstruction folder
+            reconstruction_folders = [f for f in os.listdir(sparse_folder) if os.path.isdir(os.path.join(sparse_folder, f))]
+            if reconstruction_folders:
+                input_path = os.path.join(sparse_folder, reconstruction_folders[0])
+                subprocess.run([
+                    colmap_cmd, "model_converter",
+                    "--input_path", input_path,
+                    "--output_path", sparse_folder,
+                    "--output_type", "TXT"
+                ], check=True, capture_output=True, text=True)
+                print(f"[COLMAP] Subprocess fallback model conversion completed")
+            else:
+                print(f"[COLMAP] No reconstruction folders found in {sparse_folder}")
+                print(f"[COLMAP] Model conversion failed - continuing without TXT export")
+                
+        except subprocess.CalledProcessError as e:
+            print(f"[COLMAP] Subprocess model conversion failed: {e}")
+            print(f"[COLMAP] Error output: {e.stderr}")
+            print(f"[COLMAP] Model conversion failed - continuing without TXT export")
+        except FileNotFoundError:
+            print(f"[COLMAP] COLMAP executable not found in PATH")
+            print(f"[COLMAP] Model conversion failed - continuing without TXT export")
+        except Exception as sub_error:
+            print(f"[COLMAP] Subprocess model conversion also failed: {sub_error}")
+            print(f"[COLMAP] Model conversion failed - continuing without TXT export")
 
 def image_undistortion(images_folder, sparse_folder, dense_folder):
     """Undistort images for dense reconstruction using pycolmap"""

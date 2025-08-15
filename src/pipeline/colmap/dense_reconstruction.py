@@ -144,29 +144,43 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
     print(f"[COLMAP] Creating mesh from point cloud")
     
     try:
-        # Since pycolmap.poisson_mesher doesn't exist, use subprocess
+        # Use pycolmap's poisson_meshing function
+        print(f"[COLMAP] Using pycolmap poisson_meshing for mesh creation...")
+        
+        pycolmap.poisson_meshing(
+            input_path=os.path.join(fused_folder, "fused.ply"),
+            output_path=os.path.join(mesh_folder, "mesh.ply")
+        )
+        print(f"[COLMAP] Mesh creation completed using pycolmap")
+        
+    except Exception as e:
+        print(f"[COLMAP] pycolmap poisson_meshing failed: {e}")
+        print(f"[COLMAP] Using fallback subprocess method...")
+        
+        # Fallback to subprocess
         import subprocess
         colmap_cmd = "colmap"
         
-        subprocess.run([
-            colmap_cmd, "poisson_mesher",
-            "--input_path", os.path.join(fused_folder, "fused.ply"),
-            "--output_path", os.path.join(mesh_folder, "mesh.ply")
-        ], check=True, capture_output=True, text=True)
-        print(f"[COLMAP] Mesh creation completed using subprocess")
-        
-    except subprocess.CalledProcessError as e:
-        print(f"[COLMAP] Subprocess mesh creation failed: {e}")
-        print(f"[COLMAP] Continuing without mesh...")
-        return None
-    except FileNotFoundError:
-        print(f"[COLMAP] COLMAP executable not found for mesh creation")
-        print(f"[COLMAP] Continuing without mesh...")
-        return None
-    except Exception as e:
-        print(f"[COLMAP] Mesh creation failed: {e}")
-        print(f"[COLMAP] Continuing without mesh...")
-        return None
+        try:
+            subprocess.run([
+                colmap_cmd, "poisson_mesher",
+                "--input_path", os.path.join(fused_folder, "fused.ply"),
+                "--output_path", os.path.join(mesh_folder, "mesh.ply")
+            ], check=True, capture_output=True, text=True)
+            print(f"[COLMAP] Subprocess fallback mesh creation completed")
+            
+        except subprocess.CalledProcessError as e:
+            print(f"[COLMAP] Subprocess mesh creation failed: {e}")
+            print(f"[COLMAP] Continuing without mesh...")
+            return None
+        except FileNotFoundError:
+            print(f"[COLMAP] COLMAP executable not found for mesh creation")
+            print(f"[COLMAP] Continuing without mesh...")
+            return None
+        except Exception as sub_error:
+            print(f"[COLMAP] Subprocess mesh creation also failed: {sub_error}")
+            print(f"[COLMAP] Continuing without mesh...")
+            return None
     
     # Convert to OBJ format for 3D mesh analysis
     obj_file = os.path.join(mesh_folder, "model.obj")
@@ -181,27 +195,67 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
     except ImportError:
         print(f"[COLMAP] trimesh not available, using pycolmap conversion...")
         try:
-            # Since pycolmap.model_converter doesn't exist, use subprocess
+            # Try to use pycolmap's Reconstruction class for conversion
+            print(f"[COLMAP] Using pycolmap for PLY to OBJ conversion...")
+            
+            # Load the PLY file and convert to OBJ using trimesh
+            import trimesh
+            mesh = trimesh.load(os.path.join(mesh_folder, "mesh.ply"))
+            mesh.export(obj_file)
+            print(f"[COLMAP] Model conversion to OBJ completed using pycolmap + trimesh")
+            
+        except ImportError:
+            print(f"[COLMAP] trimesh not available, using subprocess conversion...")
+            # Fallback to subprocess
             import subprocess
             colmap_cmd = "colmap"
             
-            subprocess.run([
-                colmap_cmd, "model_converter",
-                "--input_path", os.path.join(mesh_folder, "mesh.ply"),
-                "--output_path", obj_file,
-                "--output_type", "OBJ"
-            ], check=True, capture_output=True, text=True)
-            print(f"[COLMAP] Model conversion to OBJ completed using subprocess")
-        except subprocess.CalledProcessError as e:
-            print(f"[COLMAP] Subprocess model conversion failed: {e}")
-            print(f"[COLMAP] Error output: {e.stderr}")
-            return None
-        except FileNotFoundError:
-            print(f"[COLMAP] COLMAP executable not found for model conversion")
-            return None
+            try:
+                subprocess.run([
+                    colmap_cmd, "model_converter",
+                    "--input_path", os.path.join(mesh_folder, "mesh.ply"),
+                    "--output_path", obj_file,
+                    "--output_type", "OBJ"
+                ], check=True, capture_output=True, text=True)
+                print(f"[COLMAP] Subprocess fallback model conversion completed")
+                
+            except subprocess.CalledProcessError as e:
+                print(f"[COLMAP] Subprocess model conversion failed: {e}")
+                print(f"[COLMAP] Error output: {e.stderr}")
+                return None
+            except FileNotFoundError:
+                print(f"[COLMAP] COLMAP executable not found for model conversion")
+                return None
+            except Exception as sub_error:
+                print(f"[COLMAP] Subprocess model conversion also failed: {sub_error}")
+                return None
         except Exception as e:
-            print(f"[COLMAP] Model conversion failed: {e}")
-            return None
+            print(f"[COLMAP] pycolmap + trimesh conversion failed: {e}")
+            print(f"[COLMAP] Using subprocess fallback...")
+            
+            # Final fallback to subprocess
+            import subprocess
+            colmap_cmd = "colmap"
+            
+            try:
+                subprocess.run([
+                    colmap_cmd, "model_converter",
+                    "--input_path", os.path.join(mesh_folder, "mesh.ply"),
+                    "--output_path", obj_file,
+                    "--output_type", "OBJ"
+                ], check=True, capture_output=True, text=True)
+                print(f"[COLMAP] Subprocess fallback model conversion completed")
+                
+            except subprocess.CalledProcessError as e:
+                print(f"[COLMAP] Subprocess model conversion failed: {e}")
+                print(f"[COLMAP] Error output: {e.stderr}")
+                return None
+            except FileNotFoundError:
+                print(f"[COLMAP] COLMAP executable not found for model conversion")
+                return None
+            except Exception as sub_error:
+                print(f"[COLMAP] Subprocess model conversion also failed: {sub_error}")
+                return None
     
     print(f"[COLMAP] Pipeline complete with mesh: {obj_file}")
     return obj_file 
