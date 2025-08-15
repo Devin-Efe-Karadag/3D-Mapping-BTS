@@ -118,13 +118,19 @@ class Config:
     def _check_cuda_availability(self):
         """Check if CUDA is available for dense reconstruction"""
         try:
-            result = subprocess.run([self.colmap_path, "patch_match_stereo", "--help"], 
-                                  capture_output=True, text=True, timeout=10)
-            # Check if CUDA-related options are available
-            if "cuda" in result.stdout.lower() or "gpu" in result.stdout.lower():
-                return True
-            return False
-        except:
+            import torch
+            return torch.cuda.is_available()
+        except ImportError:
+            # Fallback to COLMAP-based detection if PyTorch not available
+            if self.colmap_path:
+                try:
+                    result = subprocess.run([self.colmap_path, "patch_match_stereo", "--help"], 
+                                          capture_output=True, text=True, timeout=10)
+                    # Check if CUDA-related options are available
+                    if "cuda" in result.stdout.lower() or "gpu" in result.stdout.lower():
+                        return True
+                except:
+                    pass
             return False
     
     def print_setup_info(self):

@@ -9,6 +9,9 @@ matplotlib>=3.5.0
 # PDF generation
 fpdf>=1.7.2
 
+# Deep learning framework (for CUDA detection)
+torch>=1.9.0
+
 # COLMAP Python bindings (if needed)
 # colmap>=0.1.0
 
