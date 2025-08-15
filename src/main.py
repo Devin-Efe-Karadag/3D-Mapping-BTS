@@ -86,7 +86,9 @@ config.colmap_params = {
     'max_refinements': args.max_refinements,
     'dense_image_size': args.dense_image_size,
     'window_radius': args.window_radius,
-    'window_step': args.window_step
+    'window_step': args.window_step,
+    'gpu_index': 0,  # GPU device index to use
+    'use_gpu': True   # Enable GPU acceleration
 }
 
 # Print current configuration

@@ -69,7 +69,7 @@ def feature_extraction(database_path, images_folder):
     max_image_size = getattr(config, 'colmap_params', {}).get('max_image_size', 1600)
     max_features = getattr(config, 'colmap_params', {}).get('max_features', 2048)
     
-    # Run feature extraction with robust parameters
+    # Run feature extraction with robust parameters and GPU acceleration
     try:
         run_cmd([
             colmap_cmd, "feature_extractor",
@@ -77,13 +77,14 @@ def feature_extraction(database_path, images_folder):
             "--image_path", images_folder,
             "--ImageReader.camera_model", "PINHOLE",
             "--SiftExtraction.max_image_size", str(max_image_size),
-            "--SiftExtraction.max_num_features", str(max_features)
+            "--SiftExtraction.max_num_features", str(max_features),
+            "--SiftExtraction.use_gpu", "1"  # Enable GPU acceleration
         ])
     except Exception as e:
         print(f"[COLMAP] Standard feature extraction failed: {e}")
         print(f"[COLMAP] Trying fallback parameters...")
         
-        # Fallback: More permissive parameters
+        # Fallback: More permissive parameters with GPU
         run_cmd([
             colmap_cmd, "feature_extractor",
             "--database_path", database_path,
@@ -92,7 +93,8 @@ def feature_extraction(database_path, images_folder):
             "--SiftExtraction.max_image_size", "3200",  # Larger images
             "--SiftExtraction.max_num_features", "4096",  # More features
             "--SiftExtraction.edge_threshold", "10",  # Lower edge threshold
-            "--SiftExtraction.peak_threshold", "0.01"  # Lower peak threshold
+            "--SiftExtraction.peak_threshold", "0.01",  # Lower peak threshold
+            "--SiftExtraction.use_gpu", "1"  # Enable GPU acceleration
         ])
     
     # Validate that features were actually extracted
