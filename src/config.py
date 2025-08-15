@@ -19,6 +19,9 @@ class Config:
         self.data_dir = "data"
         self.outputs_dir = "outputs"
         
+        # Get the directory where this config file is located (src directory)
+        self.src_dir = os.path.dirname(os.path.abspath(__file__))
+        
         # Timestamp folders (configurable)
         self.timestamps = ["timestamp1", "timestamp2"]
         
@@ -71,15 +74,15 @@ class Config:
     
     def get_data_path(self, timestamp):
         """Get path to data directory for a specific timestamp"""
-        return os.path.join(self.data_dir, timestamp, "images")
+        return os.path.join(self.src_dir, self.data_dir, timestamp, "images")
     
     def get_output_path(self, timestamp, run_id):
         """Get path to output directory for a specific timestamp and run"""
-        return os.path.join(self.outputs_dir, run_id, timestamp)
+        return os.path.join(self.src_dir, self.outputs_dir, run_id, timestamp)
     
     def get_mesh_path(self, timestamp, run_id):
         """Get expected mesh file path for a specific timestamp and run"""
-        return os.path.join(self.outputs_dir, run_id, timestamp, "model.obj")
+        return os.path.join(self.src_dir, self.outputs_dir, run_id, timestamp, "model.obj")
     
     def validate_setup(self):
         """Validate that all required dependencies are available"""
@@ -109,9 +112,9 @@ class Config:
                 warnings.append(f"  Expected structure: {self.data_dir}/{timestamp}/images/")
         
         # Check if running from correct directory
-        if not os.path.exists(self.data_dir):
-            errors.append(f"Data directory '{self.data_dir}' not found.")
-            errors.append("Make sure you're running from the src/ directory.")
+        if not os.path.exists(os.path.join(self.src_dir, self.data_dir)):
+            errors.append(f"Data directory '{os.path.join(self.src_dir, self.data_dir)}' not found.")
+            errors.append("Make sure the data directory exists in the src/ folder.")
         
         return errors, warnings
     
@@ -137,8 +140,9 @@ class Config:
         """Print current configuration"""
         print("Configuration:")
         print(f"  Platform: {self.system}")
-        print(f"  Data directory: {self.data_dir}")
-        print(f"  Outputs directory: {self.outputs_dir}")
+        print(f"  Source directory: {self.src_dir}")
+        print(f"  Data directory: {os.path.join(self.src_dir, self.data_dir)}")
+        print(f"  Outputs directory: {os.path.join(self.src_dir, self.outputs_dir)}")
         print(f"  Timestamps: {', '.join(self.timestamps)}")
         print(f"  COLMAP: {self.colmap_path or 'NOT FOUND'}")
         print(f"  3D Mesh Analysis: Custom Python implementation")
