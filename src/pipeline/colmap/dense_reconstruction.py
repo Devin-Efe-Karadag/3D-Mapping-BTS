@@ -10,9 +10,19 @@ from config import config
 def run_cmd(cmd, cwd=None):
     """Run a command and handle errors"""
     print(f"[COLMAP] Running: {' '.join(cmd)}")
-    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+    
+    # Set environment variables to force headless mode for Qt applications
+    env = os.environ.copy()
+    env['QT_QPA_PLATFORM'] = 'offscreen'
+    env['DISPLAY'] = ':0'
+    
+    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, env=env)
     if result.returncode != 0:
-        print(f"[COLMAP][ERROR] Command failed: {' '.join(cmd)}\n{result.stderr}")
+        print(f"[COLMAP][ERROR] Command failed: {' '.join(cmd)}")
+        if result.stderr:
+            print(f"[COLMAP][ERROR] Error output: {result.stderr}")
+        if result.stdout:
+            print(f"[COLMAP][ERROR] Standard output: {result.stdout}")
         sys.exit(result.returncode)
     print(f"[COLMAP] Command completed successfully")
     return result
@@ -36,6 +46,40 @@ def check_cuda_availability():
             pass
         return False
 
+def setup_display_environment():
+    """Set up display environment for headless operation"""
+    print(f"[COLMAP] Setting up display environment for headless operation...")
+    
+    # Set environment variables to force headless mode
+    os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+    os.environ['DISPLAY'] = ':0'
+    
+    # Check if we're in a headless environment
+    if not os.environ.get('DISPLAY') or os.environ.get('DISPLAY') == '':
+        print(f"[COLMAP] No display detected, using headless mode")
+        os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+        os.environ['DISPLAY'] = ':0'
+    
+    print(f"[COLMAP] Display environment: QT_QPA_PLATFORM={os.environ.get('QT_QPA_PLATFORM')}, DISPLAY={os.environ.get('DISPLAY')}")
+    
+    # Try to start virtual display if needed (Linux only)
+    if os.name == 'posix' and os.uname().sysname == 'Linux':
+        try:
+            # Check if Xvfb is available
+            result = subprocess.run(['which', 'Xvfb'], capture_output=True, text=True)
+            if result.returncode == 0:
+                print(f"[COLMAP] Xvfb available, starting virtual display...")
+                # Start virtual display in background
+                subprocess.Popen(['Xvfb', ':99', '-screen', '0', '1024x768x24'], 
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                os.environ['DISPLAY'] = ':99'
+                print(f"[COLMAP] Virtual display started on :99")
+        except Exception as e:
+            print(f"[COLMAP] Could not start virtual display: {e}")
+            print(f"[COLMAP] Continuing with offscreen mode")
+    
+    print(f"[COLMAP] Display environment setup complete")
+
 def run_colmap_pipeline_with_dense(images_folder, output_folder):
     """Run COLMAP pipeline including dense reconstruction if CUDA is available"""
     
@@ -51,6 +95,9 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
         sys.exit(1)
     
     print(f"[COLMAP] CUDA is available - proceeding with dense reconstruction")
+    
+    # Set up display environment for headless operation
+    setup_display_environment()
     
     database_path = os.path.join(output_folder, "database.db")
     sparse_folder = os.path.join(output_folder, "sparse")

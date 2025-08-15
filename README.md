@@ -10,6 +10,15 @@ A Python-based pipeline for 3D reconstruction using COLMAP and custom 3D mesh an
 - Use a system with NVIDIA GPU and CUDA for full functionality
 - The pipeline automatically detects CUDA availability
 
+## 🖥️ Display Environment (Linux)
+
+**On Linux systems, the pipeline automatically handles headless environments:**
+
+- Automatically sets `QT_QPA_PLATFORM=offscreen` for Qt applications
+- Attempts to start virtual display (`Xvfb`) if available
+- Falls back to offscreen mode if virtual display fails
+- No manual display configuration needed
+
 ## Dependencies
 
 ### Python Dependencies
@@ -208,6 +217,33 @@ Run the test script to verify all custom implementations work correctly:
 cd src
 python test_custom_implementations.py
 ```
+
+## Troubleshooting
+
+### Qt Display Errors on Linux
+
+If you encounter errors like:
+```
+qt.qpa.xcb: could not connect to display
+qt.qpa.plugin: Could not load the Qt platform plugin "xcb"
+```
+
+**The pipeline now automatically fixes this by:**
+1. Setting `QT_QPA_PLATFORM=offscreen`
+2. Attempting to start a virtual display (`Xvfb`)
+3. Using headless mode as fallback
+
+**Manual fix (if needed):**
+```bash
+export QT_QPA_PLATFORM=offscreen
+export DISPLAY=:0
+```
+
+### CUDA Issues
+
+- **CUDA not available**: Use a system with NVIDIA GPU
+- **CUDA version mismatch**: Update CUDA drivers and PyTorch
+- **Memory errors**: Reduce `--dense-image-size` parameter
 
 ## Understanding the Results
 
