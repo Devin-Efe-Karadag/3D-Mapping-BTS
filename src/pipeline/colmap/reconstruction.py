@@ -16,51 +16,69 @@ def mapping(database_path, images_folder, sparse_folder):
     max_iterations = getattr(config, 'colmap_params', {}).get('max_iterations', 50)
     max_refinements = getattr(config, 'colmap_params', {}).get('max_refinements', 3)
     
-    # Optimized mapping with GPU acceleration
+    # Since pycolmap.mapper doesn't exist, use subprocess directly
+    print(f"[COLMAP] Using subprocess for sparse reconstruction...")
+    
+    import subprocess
+    colmap_cmd = "colmap"
+    
     try:
-        print(f"[COLMAP] Starting pycolmap sparse reconstruction...")
+        subprocess.run([
+            colmap_cmd, "mapper",
+            "--database_path", database_path,
+            "--image_path", images_folder,
+            "--output_path", sparse_folder,
+            "--Mapper.min_num_matches", str(min_matches),
+            "--Mapper.ba_global_max_num_iterations", str(max_iterations),
+            "--Mapper.ba_global_max_refinements", str(max_refinements)
+        ], check=True, capture_output=True, text=True)
+        print(f"[COLMAP] Sparse reconstruction completed using subprocess")
         
-        pycolmap.pipeline.run_mapper(
-            database_path=database_path,
-            image_path=images_folder,
-            output_path=sparse_folder,
-            mapper_options=pycolmap.MapperOptions(
-                min_num_matches=min_matches,
-                ba_global_max_num_iterations=max_iterations,
-                ba_global_max_refinements=max_refinements
-            )
-        )
-        
-        print(f"[COLMAP] Sparse reconstruction completed")
-        
-    except Exception as gpu_error:
-        print(f"[COLMAP] GPU reconstruction failed: {gpu_error}")
-        print(f"[COLMAP] Falling back to CPU reconstruction...")
-        
-        # Fallback: CPU reconstruction
-        pycolmap.pipeline.run_mapper(
-            database_path=database_path,
-            image_path=images_folder,
-            output_path=sparse_folder,
-            mapper_options=pycolmap.MapperOptions(
-                min_num_matches=min_matches,
-                ba_global_max_num_iterations=max_iterations,
-                ba_global_max_refinements=max_refinements
-            )
-        )
-        print(f"[COLMAP] CPU fallback sparse reconstruction completed")
+    except subprocess.CalledProcessError as e:
+        print(f"[COLMAP] Subprocess reconstruction failed: {e}")
+        print(f"[COLMAP] Error output: {e.stderr}")
+        raise RuntimeError(f"COLMAP reconstruction failed: {e}")
+    except FileNotFoundError:
+        print(f"[COLMAP] COLMAP executable not found in PATH")
+        raise RuntimeError("COLMAP executable not found. Please install COLMAP or add it to PATH")
+    except Exception as e:
+        print(f"[COLMAP] Unexpected error during reconstruction: {e}")
+        raise RuntimeError(f"Unexpected error during reconstruction: {e}")
 
 def model_conversion(sparse_folder):
     """Convert model to TXT format using pycolmap"""
     print(f"[COLMAP] Converting model to TXT format")
     
-    # Find the first reconstruction
-    reconstructions = pycolmap.Reconstruction(sparse_folder)
+    # Since pycolmap.model_converter doesn't exist, use subprocess directly
+    import subprocess
+    colmap_cmd = "colmap"
     
-    # Export to TXT format - use the correct pycolmap API
-    reconstructions.export_txt(sparse_folder)
-    
-    print(f"[COLMAP] Model conversion completed")
+    try:
+        # Find the first reconstruction folder
+        reconstruction_folders = [f for f in os.listdir(sparse_folder) if os.path.isdir(os.path.join(sparse_folder, f))]
+        if reconstruction_folders:
+            input_path = os.path.join(sparse_folder, reconstruction_folders[0])
+            subprocess.run([
+                colmap_cmd, "model_converter",
+                "--input_path", input_path,
+                "--output_path", sparse_folder,
+                "--output_type", "TXT"
+            ], check=True, capture_output=True, text=True)
+            print(f"[COLMAP] Model conversion completed using subprocess")
+        else:
+            print(f"[COLMAP] No reconstruction folders found in {sparse_folder}")
+            print(f"[COLMAP] Model conversion skipped - no reconstruction to convert")
+            
+    except subprocess.CalledProcessError as e:
+        print(f"[COLMAP] Subprocess model conversion failed: {e}")
+        print(f"[COLMAP] Error output: {e.stderr}")
+        print(f"[COLMAP] Model conversion failed - continuing without TXT export")
+    except FileNotFoundError:
+        print(f"[COLMAP] COLMAP executable not found in PATH")
+        print(f"[COLMAP] Model conversion failed - continuing without TXT export")
+    except Exception as e:
+        print(f"[COLMAP] Unexpected error during model conversion: {e}")
+        print(f"[COLMAP] Model conversion failed - continuing without TXT export")
 
 def image_undistortion(images_folder, sparse_folder, dense_folder):
     """Undistort images for dense reconstruction using pycolmap"""
@@ -70,6 +88,7 @@ def image_undistortion(images_folder, sparse_folder, dense_folder):
     try:
         print(f"[COLMAP] Starting pycolmap image undistortion...")
         
+        # Try to use pycolmap's undistort_images function
         pycolmap.undistort_images(
             image_path=images_folder,
             input_path=sparse_folder,
@@ -77,16 +96,47 @@ def image_undistortion(images_folder, sparse_folder, dense_folder):
             output_type="COLMAP"
         )
         
-        print(f"[COLMAP] Image undistortion completed")
+        print(f"[COLMAP] Image undistortion completed using pycolmap")
         
     except Exception as e:
-        print(f"[COLMAP] Image undistortion failed: {e}")
-        print(f"[COLMAP] Continuing without undistortion...")
-        # Copy original images to dense folder as fallback
-        import shutil
-        for img_file in os.listdir(images_folder):
-            if img_file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif')):
-                src = os.path.join(images_folder, img_file)
-                dst = os.path.join(dense_folder, img_file)
-                shutil.copy2(src, dst)
-        print(f"[COLMAP] Copied original images as fallback") 
+        print(f"[COLMAP] pycolmap image undistortion failed: {e}")
+        print(f"[COLMAP] Using fallback subprocess method...")
+        
+        # Fallback to subprocess
+        import subprocess
+        colmap_cmd = "colmap"
+        
+        try:
+            # Find the first reconstruction folder
+            reconstruction_folders = [f for f in os.listdir(sparse_folder) if os.path.isdir(os.path.join(sparse_folder, f))]
+            if reconstruction_folders:
+                input_path = os.path.join(sparse_folder, reconstruction_folders[0])
+                subprocess.run([
+                    colmap_cmd, "image_undistorter",
+                    "--image_path", images_folder,
+                    "--input_path", input_path,
+                    "--output_path", dense_folder,
+                    "--output_type", "COLMAP"
+                ], check=True, capture_output=True, text=True)
+                print(f"[COLMAP] Subprocess fallback image undistortion completed")
+            else:
+                print(f"[COLMAP] No reconstruction folders found, copying original images...")
+                # Copy original images to dense folder as fallback
+                import shutil
+                for img_file in os.listdir(images_folder):
+                    if img_file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif')):
+                        src = os.path.join(images_folder, img_file)
+                        dst = os.path.join(dense_folder, img_file)
+                        shutil.copy2(src, dst)
+                print(f"[COLMAP] Copied original images as fallback")
+        except Exception as sub_error:
+            print(f"[COLMAP] Subprocess image undistortion also failed: {sub_error}")
+            print(f"[COLMAP] Copying original images as final fallback...")
+            # Final fallback: copy original images
+            import shutil
+            for img_file in os.listdir(images_folder):
+                if img_file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif')):
+                    src = os.path.join(images_folder, img_file)
+                    dst = os.path.join(dense_folder, img_file)
+                    shutil.copy2(src, dst)
+            print(f"[COLMAP] Copied original images as final fallback") 
