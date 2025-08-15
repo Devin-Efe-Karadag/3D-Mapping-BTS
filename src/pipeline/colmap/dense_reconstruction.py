@@ -20,15 +20,20 @@ def run_cmd(cmd, cwd=None):
 def check_cuda_availability():
     """Check if CUDA is available for dense reconstruction"""
     try:
-        # Use config for COLMAP path
-        colmap_cmd = config.colmap_path or "colmap"
-        result = subprocess.run([colmap_cmd, "patch_match_stereo", "--help"], 
-                              capture_output=True, text=True, timeout=10)
-        # Check if CUDA-related options are available
-        if "cuda" in result.stdout.lower() or "gpu" in result.stdout.lower():
-            return True
-        return False
-    except:
+        # Use PyTorch for reliable CUDA detection
+        import torch
+        return torch.cuda.is_available()
+    except ImportError:
+        # Fallback to COLMAP-based detection if PyTorch not available
+        try:
+            colmap_cmd = config.colmap_path or "colmap"
+            result = subprocess.run([colmap_cmd, "patch_match_stereo", "--help"], 
+                                  capture_output=True, text=True, timeout=10)
+            # Check if CUDA-related options are available
+            if "cuda" in result.stdout.lower() or "gpu" in result.stdout.lower():
+                return True
+        except:
+            pass
         return False
 
 def run_colmap_pipeline_with_dense(images_folder, output_folder):
