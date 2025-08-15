@@ -119,10 +119,36 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
     from .mesh_creation import run_colmap_pipeline
     
     # Standard COLMAP pipeline
-    feature_extraction(database_path, images_folder)
-    robust_sequential_matching(database_path)
-    spatial_matching(database_path)
-    mapping(database_path, images_folder, sparse_folder)
+    try:
+        feature_extraction(database_path, images_folder)
+        robust_sequential_matching(database_path)
+        spatial_matching(database_path)
+        mapping(database_path, images_folder, sparse_folder)
+    except Exception as e:
+        print(f"[COLMAP][ERROR] Pipeline failed: {e}")
+        print(f"[COLMAP] Attempting to diagnose the issue...")
+        
+        # Check if database exists and has content
+        if os.path.exists(database_path):
+            db_size = os.path.getsize(database_path)
+            print(f"[COLMAP] Database size: {db_size} bytes")
+            
+            if db_size < 1024:
+                print(f"[COLMAP][ERROR] Database is too small - feature extraction likely failed")
+                print(f"[COLMAP] Possible causes:")
+                print(f"  - Images are corrupted or unreadable")
+                print(f"  - Images have no distinctive features")
+                print(f"  - Images are too similar or too different")
+                print(f"  - Image format not supported by COLMAP")
+                print(f"[COLMAP] Check the images in: {images_folder}")
+                sys.exit(1)
+        else:
+            print(f"[COLMAP][ERROR] Database was never created")
+            print(f"[COLMAP] Feature extraction completely failed")
+            sys.exit(1)
+        
+        # Re-raise the exception if we can't handle it
+        raise
     model_conversion(sparse_folder)
     image_undistortion(images_folder, sparse_folder, dense_folder)
     
