@@ -1,13 +1,23 @@
 """
-COLMAP Feature Extraction Module using pycolmap
+COLMAP Feature Extraction Module
 """
 import os
+import subprocess
 import sys
-import pycolmap
 from config import config
 
+def run_cmd(cmd, cwd=None):
+    """Run a command and handle errors"""
+    print(f"[COLMAP] Running: {' '.join(cmd)}")
+    result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"[COLMAP][ERROR] Command failed: {' '.join(cmd)}\n{result.stderr}")
+        sys.exit(result.returncode)
+    print(f"[COLMAP] Command completed successfully")
+    return result
+
 def feature_extraction(database_path, images_folder):
-    """Extract features from images using pycolmap"""
+    """Extract features from images using COLMAP"""
     print(f"[COLMAP] Starting feature extraction for {images_folder}")
     
     # Validate input
@@ -52,67 +62,58 @@ def feature_extraction(database_path, images_folder):
     
     print(f"[COLMAP] {len(valid_images)}/{len(image_files)} images are valid")
     
+    # Use config for COLMAP path
+    colmap_cmd = config.colmap_path or "colmap"
+    
     # Get configurable parameters
     max_image_size = getattr(config, 'colmap_params', {}).get('max_image_size', 1600)
     max_features = getattr(config, 'colmap_params', {}).get('max_features', 2048)
     
-    # Create database directory if it doesn't exist
-    database_dir = os.path.dirname(database_path)
-    os.makedirs(database_dir, exist_ok=True)
-    
-    # Run feature extraction using pycolmap
+    # Run feature extraction with robust parameters and GPU acceleration
     try:
-        print(f"[COLMAP] Starting pycolmap feature extraction...")
-        
-        # Extract features using pycolmap
-        pycolmap.extract_features(
-            database_path=database_path,
-            image_path=images_folder,
-            camera_model="PINHOLE",
-            sift_options=pycolmap.SiftExtractionOptions(
-                max_image_size=max_image_size,
-                max_num_features=max_features,
-                use_gpu=True  # Try GPU first
-            )
-        )
-        
-        print(f"[COLMAP] Feature extraction completed successfully")
-        
+        print(f"[COLMAP] Trying GPU-accelerated feature extraction...")
+        run_cmd([
+            colmap_cmd, "feature_extractor",
+            "--database_path", database_path,
+            "--image_path", images_folder,
+            "--ImageReader.camera_model", "PINHOLE",
+            "--SiftExtraction.max_image_size", str(max_image_size),
+            "--SiftExtraction.max_num_features", str(max_features),
+            "--SiftExtraction.use_gpu", "1"  # Enable GPU acceleration
+        ])
+        print(f"[COLMAP] GPU-accelerated feature extraction completed")
     except Exception as gpu_error:
-        print(f"[COLMAP] GPU feature extraction failed: {gpu_error}")
+        print(f"[COLMAP] GPU feature extraction failed (likely OpenGL context issue): {gpu_error}")
         print(f"[COLMAP] Falling back to CPU feature extraction...")
         
+        # Fallback: CPU feature extraction with more permissive parameters
         try:
-            # Fallback: CPU feature extraction
-            pycolmap.extract_features(
-                database_path=database_path,
-                image_path=images_folder,
-                camera_model="PINHOLE",
-                sift_options=pycolmap.SiftExtractionOptions(
-                    max_image_size=max_image_size,
-                    max_num_features=max_features,
-                    use_gpu=False  # Force CPU
-                )
-            )
+            run_cmd([
+                colmap_cmd, "feature_extractor",
+                "--database_path", database_path,
+                "--image_path", images_folder,
+                "--ImageReader.camera_model", "PINHOLE",
+                "--SiftExtraction.max_image_size", str(max_image_size),
+                "--SiftExtraction.max_num_features", str(max_features),
+                "--SiftExtraction.use_gpu", "0"  # Force CPU extraction
+            ])
             print(f"[COLMAP] CPU feature extraction completed")
-            
         except Exception as e:
             print(f"[COLMAP] Standard CPU feature extraction failed: {e}")
             print(f"[COLMAP] Trying fallback parameters with CPU...")
             
             # Final fallback: More permissive parameters with CPU
-            pycolmap.extract_features(
-                database_path=database_path,
-                image_path=images_folder,
-                camera_model="PINHOLE",
-                sift_options=pycolmap.SiftExtractionOptions(
-                    max_image_size=3200,  # Larger images
-                    max_num_features=4096,  # More features
-                    edge_threshold=10,  # Lower edge threshold
-                    peak_threshold=0.01,  # Lower peak threshold
-                    use_gpu=False  # Force CPU
-                )
-            )
+            run_cmd([
+                colmap_cmd, "feature_extractor",
+                "--database_path", database_path,
+                "--image_path", images_folder,
+                "--ImageReader.camera_model", "PINHOLE",
+                "--SiftExtraction.max_image_size", "3200",  # Larger images
+                "--SiftExtraction.max_num_features", "4096",  # More features
+                "--SiftExtraction.edge_threshold", "10",  # Lower edge threshold
+                "--SiftExtraction.peak_threshold", "0.01",  # Lower peak threshold
+                "--SiftExtraction.use_gpu", "0"  # Force CPU extraction
+            ])
             print(f"[COLMAP] CPU fallback feature extraction completed")
     
     # Validate that features were actually extracted
@@ -129,22 +130,27 @@ def feature_extraction(database_path, images_folder):
     print(f"[COLMAP] Feature extraction completed successfully")
     print(f"[COLMAP] Database size: {db_size} bytes")
     
-    # Try to get feature count from database using pycolmap
+    # Try to get feature count from database
     try:
-        # Open database with pycolmap
-        database = pycolmap.Database(database_path)
+        import sqlite3
+        conn = sqlite3.connect(database_path)
+        cursor = conn.cursor()
         
-        # Get keypoint count using correct pycolmap API
-        keypoint_count = database.num_keypoints()
-        print(f"[COLMAP] Extracted {keypoint_count} keypoints from {len(image_files)} images")
-        
-        if keypoint_count == 0:
-            print(f"[COLMAP][ERROR] No keypoints extracted - images may be corrupted or unsuitable")
-            print(f"[COLMAP][ERROR] Check image quality, format, and content")
-            sys.exit(1)
+        # Check if keypoints table exists and has data
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='keypoints'")
+        if cursor.fetchone():
+            cursor.execute("SELECT COUNT(*) FROM keypoints")
+            keypoint_count = cursor.fetchone()[0]
+            print(f"[COLMAP] Extracted {keypoint_count} keypoints from {len(image_files)} images")
             
-        database.close()
-        
+            if keypoint_count == 0:
+                print(f"[COLMAP][ERROR] No keypoints extracted - images may be corrupted or unsuitable")
+                print(f"[COLMAP][ERROR] Check image quality, format, and content")
+                sys.exit(1)
+        else:
+            print(f"[COLMAP][WARNING] Keypoints table not found in database")
+            
+        conn.close()
     except Exception as e:
         print(f"[COLMAP][WARNING] Could not verify keypoint count: {e}")
         print(f"[COLMAP] Continuing with database size validation only") 
