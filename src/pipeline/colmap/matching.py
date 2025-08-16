@@ -44,7 +44,7 @@ def sequential_matching(database_path):
     run_cmd([
         colmap_cmd, "sequential_matcher",
         "--database_path", database_path,
-        "--SiftGPUIndex", "0",  # Use first GPU device
+        "--SiftMatching.gpu_index", "0",  # Use first GPU device
         "--SiftMatching.max_ratio", str(max_ratio),
         "--SiftMatching.max_distance", str(max_distance),
         "--SiftMatching.cross_check", "1",
@@ -71,7 +71,7 @@ def robust_sequential_matching(database_path):
         run_cmd([
             colmap_cmd, "exhaustive_matcher",
             "--database_path", database_path,
-            "--SiftGPUIndex", "0",  # Use first GPU device
+            "--SiftMatching.gpu_index", "0",  # Use first GPU device
             "--SiftMatching.max_ratio", "0.9",  # More permissive
             "--SiftMatching.max_distance", "1.0",  # More permissive
             "--SiftMatching.cross_check", "1",
@@ -91,7 +91,7 @@ def spatial_matching(database_path):
     run_cmd([
         colmap_cmd, "spatial_matcher",
         "--database_path", database_path,
-        "--SiftGPUIndex", "0",  # Use first GPU device
+        "--SiftMatching.gpu_index", "0",  # Use first GPU device
         "--SpatialMatching.max_num_neighbors", "50",
         "--SiftMatching.max_num_matches", "32768",  # Increase max matches
         "--SiftMatching.max_num_trials", "10000",   # Increase trials

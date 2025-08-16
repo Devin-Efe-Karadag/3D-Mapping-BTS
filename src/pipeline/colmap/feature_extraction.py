@@ -78,7 +78,7 @@ def feature_extraction(database_path, images_folder):
         "--ImageReader.camera_model", "PINHOLE",
         "--SiftExtraction.max_image_size", str(max_image_size),
         "--SiftExtraction.max_num_features", str(max_features),
-        "--SiftGPUIndex", "0"  # Use first GPU device
+        "--SiftExtraction.gpu_index", "0"  # Use first GPU device
     ])
     print(f"[COLMAP] GPU-accelerated feature extraction completed")
     
