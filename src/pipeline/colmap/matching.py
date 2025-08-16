@@ -43,13 +43,8 @@ def sequential_matching(database_path):
     print(f"[COLMAP] Running sequential matching (GPU acceleration automatic if CUDA available)...")
     run_cmd([
         colmap_cmd, "sequential_matcher",
-        "--database_path", database_path,
-        "--SiftMatching.max_ratio", str(max_ratio),
-        "--SiftMatching.max_distance", str(max_distance),
-        "--SiftMatching.cross_check", "1",
-        "--SiftMatching.max_num_matches", "32768",  # Increase max matches
-        "--SiftMatching.max_num_trials", "10000",   # Increase trials
-        "--SiftMatching.min_inlier_ratio", "0.25"   # Lower inlier ratio
+        "--database_path", database_path
+        # Use only essential options to avoid compatibility issues
     ])
     print(f"[COLMAP] Sequential matching completed")
 
@@ -69,12 +64,8 @@ def robust_sequential_matching(database_path):
         print(f"[COLMAP] Running exhaustive matching...")
         run_cmd([
             colmap_cmd, "exhaustive_matcher",
-            "--database_path", database_path,
-            "--SiftMatching.max_ratio", "0.9",  # More permissive
-            "--SiftMatching.max_distance", "1.0",  # More permissive
-            "--SiftMatching.cross_check", "1",
-            "--SiftMatching.max_num_matches", "65536",  # Even more matches
-            "--SiftMatching.max_num_trials", "20000"
+            "--database_path", database_path
+            # Use only essential options to avoid compatibility issues
         ])
         print(f"[COLMAP] Exhaustive matching completed")
 
@@ -88,11 +79,8 @@ def spatial_matching(database_path):
     print(f"[COLMAP] Running spatial matching (GPU acceleration automatic if CUDA available)...")
     run_cmd([
         colmap_cmd, "spatial_matcher",
-        "--database_path", database_path,
-        "--SpatialMatching.max_num_neighbors", "50",
-        "--SiftMatching.max_num_matches", "32768",  # Increase max matches
-        "--SiftMatching.max_num_trials", "10000",   # Increase trials
-        "--SiftMatching.min_inlier_ratio", "0.25"   # Lower inlier ratio
+        "--database_path", database_path
+        # Use only essential options to avoid compatibility issues
     ])
     print(f"[COLMAP] Spatial matching completed")
 
@@ -111,13 +99,8 @@ def exhaustive_matching(database_path):
     print(f"[COLMAP] Running exhaustive matching (GPU acceleration automatic if CUDA available)...")
     run_cmd([
         colmap_cmd, "exhaustive_matcher",
-        "--database_path", database_path,
-        "--SiftMatching.max_ratio", str(max_ratio),
-        "--SiftMatching.max_distance", str(max_distance),
-        "--SiftMatching.cross_check", "1",
-        "--SiftMatching.max_num_matches", "32768",  # Increase max matches
-        "--SiftMatching.max_num_trials", "10000",   # Increase trials
-        "--SiftMatching.min_inlier_ratio", "0.25"   # Lower inlier ratio
+        "--database_path", database_path
+        # Use only essential options to avoid compatibility issues
     ])
     print(f"[COLMAP] Exhaustive matching completed")
 
@@ -137,11 +120,7 @@ def robust_matching(database_path):
         print(f"[COLMAP] Running exhaustive matching with permissive parameters...")
         run_cmd([
             colmap_cmd, "exhaustive_matcher",
-            "--database_path", database_path,
-            "--SiftMatching.max_ratio", "0.9",  # More permissive
-            "--SiftMatching.max_distance", "1.0",  # More permissive
-            "--SiftMatching.cross_check", "1",
-            "--SiftMatching.max_num_matches", "65536",  # Even more matches
-            "--SiftMatching.max_num_trials", "20000"
+            "--database_path", database_path
+            # Use only essential options to avoid compatibility issues
         ])
         print(f"[COLMAP] Exhaustive matching with permissive parameters completed") 

@@ -75,9 +75,8 @@ def feature_extraction(database_path, images_folder):
         colmap_cmd, "feature_extractor",
         "--database_path", database_path,
         "--image_path", images_folder,
-        "--ImageReader.camera_model", "PINHOLE",
-        "--SiftExtraction.max_image_size", str(max_image_size),
-        "--SiftExtraction.max_num_features", str(max_features)
+        "--ImageReader.camera_model", "PINHOLE"
+        # Use only essential options to avoid compatibility issues
         # GPU acceleration is automatic when CUDA is available
     ])
     print(f"[COLMAP] Feature extraction completed")

@@ -168,10 +168,8 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
     run_cmd([
         colmap_cmd, "patch_match_stereo",
         "--workspace_path", dense_folder,
-        "--workspace_format", "COLMAP",
-        "--PatchMatchStereo.max_image_size", str(dense_image_size),
-        "--PatchMatchStereo.window_radius", str(window_radius),
-        "--PatchMatchStereo.window_step", str(window_step)
+        "--workspace_format", "COLMAP"
+        # Use only essential options to avoid compatibility issues
         # GPU acceleration is automatic when CUDA is available
     ])
     print(f"[COLMAP] Dense stereo reconstruction completed")

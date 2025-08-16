@@ -34,10 +34,8 @@ def mapping(database_path, images_folder, sparse_folder):
         colmap_cmd, "mapper",
         "--database_path", database_path,
         "--image_path", images_folder,
-        "--output_path", sparse_folder,
-        "--Mapper.ba_global_max_num_iterations", str(max_iterations),
-        "--Mapper.ba_global_max_refinements", str(max_refinements),
-        "--Mapper.min_num_matches", str(min_matches)
+        "--output_path", sparse_folder
+        # Use only essential options to avoid compatibility issues
         # GPU acceleration is automatic when CUDA is available
     ])
     print(f"[COLMAP] Sparse reconstruction completed")
