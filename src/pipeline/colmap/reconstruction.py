@@ -53,15 +53,15 @@ def mapping(database_path, images_folder, sparse_folder):
         "--Mapper.max_model_overlap", "10",  # Reduced from 20 = faster
         "--Mapper.min_model_size", "8",  # Reduced from 10 = faster
         "--Mapper.init_num_trials", "100",  # Reduced from 200 = faster
-        "--Mapper.extract_colors", "0",  # Disabled for speed
+        "--Mapper.extract_colors", "1",  # Keep enabled for better visualization
         "--Mapper.num_threads", str(multiprocessing.cpu_count()),  # Use all CPU cores
         "--Mapper.min_focal_length_ratio", "0.2",  # Increased from 0.1 = faster
         "--Mapper.max_focal_length_ratio", "5",  # Reduced from 10 = faster
         "--Mapper.max_extra_param", "0",  # Reduced from 1 = faster
-        "--Mapper.ba_refine_focal_length", "0",  # Disabled for speed
+        "--Mapper.ba_refine_focal_length", "1",  # Keep enabled for better calibration
         "--Mapper.ba_refine_principal_point", "0",  # Already disabled
-        "--Mapper.ba_refine_extra_params", "0",  # Disabled for speed
-        "--Mapper.ba_refine_sensor_from_rig", "0",  # Disabled for speed
+        "--Mapper.ba_refine_extra_params", "1",  # Keep enabled for better calibration
+        "--Mapper.ba_refine_sensor_from_rig", "1",  # Keep enabled for better calibration
         "--Mapper.ba_local_num_images", "4",  # Reduced from 6 = faster
         "--Mapper.ba_local_function_tolerance", "0.001",  # Increased from 0 = faster convergence
         "--Mapper.ba_local_max_num_iterations", "15",  # Reduced from 25 = faster

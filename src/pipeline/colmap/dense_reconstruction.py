@@ -161,44 +161,44 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
     colmap_cmd = config.colmap_path or "colmap"
     
     # Get configurable parameters
-    dense_image_size = getattr(config, 'colmap_params', {}).get('dense_image_size', 1600)  # Reduced from 2000
-    window_radius = getattr(config, 'colmap_params', {}).get('window_radius', 3)  # Reduced from 5
-    window_step = getattr(config, 'colmap_params', {}).get('window_step', 2)  # Increased from 2
+    dense_image_size = getattr(config, 'colmap_params', {}).get('dense_image_size', 1800)  # Increased from 1600 for better quality
+    window_radius = getattr(config, 'colmap_params', {}).get('window_radius', 4)  # Increased from 3 for better quality
+    window_step = getattr(config, 'colmap_params', {}).get('window_step', 2)  # Keep at 2
     
-    print(f"[COLMAP] 🚀 Using AGGRESSIVE speed optimization for dense stereo:")
-    print(f"[COLMAP]   - dense_image_size: {dense_image_size} (reduced for speed)")
-    print(f"[COLMAP]   - window_radius: {window_radius} (reduced for speed)")
-    print(f"[COLMAP]   - window_step: {window_step} (increased for speed)")
+    print(f"[COLMAP] 🚀 Using BALANCED speed optimization for dense stereo:")
+    print(f"[COLMAP]   - dense_image_size: {dense_image_size} (balanced for quality)")
+    print(f"[COLMAP]   - window_radius: {window_radius} (balanced for quality)")
+    print(f"[COLMAP]   - window_step: {window_step} (balanced for speed)")
     print(f"[COLMAP]   - GPU acceleration: ENABLED")
     
-    # Build command with AGGRESSIVE speed optimization options
+    # Build command with BALANCED speed optimization options
     cmd = [
         colmap_cmd, "patch_match_stereo",
         "--workspace_path", dense_folder,
         "--workspace_format", "COLMAP",
-        # AGGRESSIVE PATCH MATCH STEREO OPTIMIZATIONS FOR MAXIMUM SPEED
-        "--PatchMatchStereo.max_image_size", str(dense_image_size),  # Reduced for speed
+        # BALANCED PATCH MATCH STEREO OPTIMIZATIONS FOR SPEED + QUALITY
+        "--PatchMatchStereo.max_image_size", str(dense_image_size),  # Balanced for quality
         "--PatchMatchStereo.gpu_index", "0",  # Use first CUDA GPU device
         "--PatchMatchStereo.depth_min", "-1",  # Auto-detect
         "--PatchMatchStereo.depth_max", "-1",  # Auto-detect
-        "--PatchMatchStereo.window_radius", str(window_radius),  # Reduced from 5 = faster
-        "--PatchMatchStereo.window_step", str(window_step),  # Increased from 1 = faster
+        "--PatchMatchStereo.window_radius", str(window_radius),  # Balanced for quality
+        "--PatchMatchStereo.window_step", str(window_step),  # Balanced for speed
         "--PatchMatchStereo.sigma_spatial", "-1",  # Auto-detect
-        "--PatchMatchStereo.sigma_color", "0.3",  # Increased from 0.2 = faster
-        "--PatchMatchStereo.num_samples", "10",  # Reduced from 15 = faster
-        "--PatchMatchStereo.ncc_sigma", "0.8",  # Increased from 0.6 = faster
-        "--PatchMatchStereo.min_triangulation_angle", "0.8",  # Reduced from 1 = faster
-        "--PatchMatchStereo.incident_angle_sigma", "1.2",  # Increased from 0.9 = faster
-        "--PatchMatchStereo.num_iterations", "3",  # Reduced from 5 = much faster
+        "--PatchMatchStereo.sigma_color", "0.25",  # Balanced threshold
+        "--PatchMatchStereo.num_samples", "12",  # Balanced for quality
+        "--PatchMatchStereo.ncc_sigma", "0.7",  # Balanced threshold
+        "--PatchMatchStereo.min_triangulation_angle", "0.9",  # Balanced threshold
+        "--PatchMatchStereo.incident_angle_sigma", "1.0",  # Balanced threshold
+        "--PatchMatchStereo.num_iterations", "4",  # Balanced for quality
         "--PatchMatchStereo.geom_consistency", "0",  # Disabled for speed
-        "--PatchMatchStereo.geom_consistency_regularizer", "0.5",  # Increased from 0.3 = faster
-        "--PatchMatchStereo.geom_consistency_max_cost", "5",  # Increased from 3 = faster
+        "--PatchMatchStereo.geom_consistency_regularizer", "0.4",  # Balanced threshold
+        "--PatchMatchStereo.geom_consistency_max_cost", "4",  # Balanced threshold
         "--PatchMatchStereo.filter", "1",  # Keep filtering
-        "--PatchMatchStereo.filter_min_ncc", "0.08",  # Reduced from 0.1 = faster
-        "--PatchMatchStereo.filter_min_triangulation_angle", "2",  # Reduced from 3 = faster
-        "--PatchMatchStereo.filter_min_num_consistent", "1",  # Reduced from 2 = faster
-        "--PatchMatchStereo.filter_geom_consistency_max_cost", "2",  # Increased from 1 = faster
-        "--PatchMatchStereo.cache_size", "16",  # Reduced from 32 = less memory usage
+        "--PatchMatchStereo.filter_min_ncc", "0.09",  # Balanced threshold
+        "--PatchMatchStereo.filter_min_triangulation_angle", "2.5",  # Balanced threshold
+        "--PatchMatchStereo.filter_min_num_consistent", "1",  # Keep minimal
+        "--PatchMatchStereo.filter_geom_consistency_max_cost", "1.5",  # Balanced threshold
+        "--PatchMatchStereo.cache_size", "20",  # Balanced memory usage
         "--PatchMatchStereo.allow_missing_files", "0",  # Keep default
         "--PatchMatchStereo.write_consistency_graph", "0"  # Already disabled
     ]
@@ -207,15 +207,16 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
     print(f"[COLMAP]   • Max image size: {dense_image_size}px (vs default unlimited)")
     print(f"[COLMAP]   • Window radius: {window_radius} (vs default 5)")
     print(f"[COLMAP]   • Window step: {window_step} (vs default 1)")
-    print(f"[COLMAP]   • Num samples: 10 (vs default 15)")
-    print(f"[COLMAP]   • Num iterations: 3 (vs default 5)")
+    print(f"[COLMAP]   • Num samples: 12 (vs default 15)")
+    print(f"[COLMAP]   • Num iterations: 4 (vs default 5)")
     print(f"[COLMAP]   • Geom consistency: DISABLED for speed")
-    print(f"[COLMAP]   • Cache size: 16GB (vs default 32GB)")
+    print(f"[COLMAP]   • Cache size: 20GB (vs default 32GB)")
     print(f"[COLMAP]   • GPU acceleration: ENABLED")
     
     run_cmd(cmd)
-    print(f"[COLMAP] 🎉 ULTRA-FAST CUDA GPU-accelerated dense stereo reconstruction completed!")
-    print(f"[COLMAP] Expected speed improvement: 3-6x faster than default settings")
+    print(f"[COLMAP] 🎉 BALANCED CUDA GPU-accelerated dense stereo reconstruction completed!")
+    print(f"[COLMAP] Expected speed improvement: 2-4x faster than default settings")
+    print(f"[COLMAP] Note: Balanced for quality to prevent downstream crashes")
     
     # Dense fusion
     print(f"[COLMAP] Starting ULTRA-FAST dense fusion")

@@ -66,20 +66,20 @@ def feature_extraction(database_path, images_folder):
     # Use config for COLMAP path
     colmap_cmd = config.colmap_path or "colmap"
     
-    # AGGRESSIVE SPEED OPTIMIZATION PARAMETERS
-    # These settings will make feature extraction MUCH faster
-    max_image_size = getattr(config, 'colmap_params', {}).get('max_image_size', 1200)  # Reduced from 1600
-    max_features = getattr(config, 'colmap_params', {}).get('max_features', 1024)      # Reduced from 2048
+    # BALANCED SPEED OPTIMIZATION PARAMETERS
+    # These settings balance speed with quality to prevent downstream crashes
+    max_image_size = getattr(config, 'colmap_params', {}).get('max_image_size', 1400)  # Increased from 1200 for better quality
+    max_features = getattr(config, 'colmap_params', {}).get('max_features', 1536)      # Increased from 1024 for better quality
     
-    print(f"[COLMAP] 🚀 Using AGGRESSIVE speed optimization:")
-    print(f"[COLMAP]   - max_image_size: {max_image_size} (faster processing)")
-    print(f"[COLMAP]   - max_features: {max_features} (faster extraction)")
+    print(f"[COLMAP] 🚀 Using BALANCED speed optimization:")
+    print(f"[COLMAP]   - max_image_size: {max_image_size} (balanced speed/quality)")
+    print(f"[COLMAP]   - max_features: {max_features} (balanced speed/quality)")
     print(f"[COLMAP]   - GPU acceleration: ENABLED")
     
-    # Run feature extraction with AGGRESSIVE speed optimization
-    print(f"[COLMAP] Running ULTRA-FAST CUDA GPU-accelerated feature extraction...")
+    # Run feature extraction with BALANCED speed optimization
+    print(f"[COLMAP] Running BALANCED CUDA GPU-accelerated feature extraction...")
     
-    # Build command with AGGRESSIVE speed optimization options
+    # Build command with BALANCED speed optimization options
     cmd = [
         colmap_cmd, "feature_extractor",
         "--database_path", database_path,
@@ -88,20 +88,20 @@ def feature_extraction(database_path, images_folder):
         "--FeatureExtraction.use_gpu", "1",  # Enable CUDA GPU acceleration
         "--FeatureExtraction.gpu_index", "0",  # Use first CUDA GPU device
         "--FeatureExtraction.num_threads", str(multiprocessing.cpu_count()),  # Use all CPU cores
-        # AGGRESSIVE SIFT OPTIMIZATIONS FOR MAXIMUM SPEED
-        "--SiftExtraction.max_image_size", str(max_image_size),      # Smaller images = faster
-        "--SiftExtraction.max_num_features", str(max_features),      # Fewer features = faster
+        # BALANCED SIFT OPTIMIZATIONS FOR SPEED + QUALITY
+        "--SiftExtraction.max_image_size", str(max_image_size),      # Balanced size for quality
+        "--SiftExtraction.max_num_features", str(max_features),      # Balanced features for quality
         "--SiftExtraction.num_octaves", "3",                        # Reduced from 4 = faster
         "--SiftExtraction.octave_resolution", "2",                  # Reduced from 3 = faster
-        "--SiftExtraction.peak_threshold", "0.015",                 # Higher threshold = fewer features = faster
-        "--SiftExtraction.edge_threshold", "8",                     # Reduced from 10 = faster
-        "--SiftExtraction.estimate_affine_shape", "0",              # Disabled = faster
+        "--SiftExtraction.peak_threshold", "0.012",                 # Balanced threshold
+        "--SiftExtraction.edge_threshold", "9",                     # Balanced threshold
+        "--SiftExtraction.estimate_affine_shape", "1",              # Keep enabled for better features
         "--SiftExtraction.max_num_orientations", "1",               # Reduced from 2 = faster
-        "--SiftExtraction.upright", "0",                            # Disabled = faster
+        "--SiftExtraction.upright", "1",                            # Keep enabled for better matching
         "--SiftExtraction.domain_size_pooling", "0",                # Disabled = faster
-        "--SiftExtraction.dsp_min_scale", "0.2",                    # Reduced range = faster
-        "--SiftExtraction.dsp_max_scale", "2.0",                    # Reduced range = faster
-        "--SiftExtraction.dsp_num_scales", "5"                      # Reduced from 10 = faster
+        "--SiftExtraction.dsp_min_scale", "0.2",                    # Balanced range
+        "--SiftExtraction.dsp_max_scale", "2.5",                    # Balanced range
+        "--SiftExtraction.dsp_num_scales", "6"                      # Balanced scales
     ]
     
     print(f"[COLMAP] Speed optimization summary:")
@@ -109,13 +109,14 @@ def feature_extraction(database_path, images_folder):
     print(f"[COLMAP]   • Max features: {max_features} (vs default 8192)")
     print(f"[COLMAP]   • Octaves: 3 (vs default 4)")
     print(f"[COLMAP]   • Octave resolution: 2 (vs default 3)")
-    print(f"[COLMAP]   • Peak threshold: 0.015 (vs default 0.0067)")
+    print(f"[COLMAP]   • Peak threshold: 0.012 (vs default 0.0067)")
     print(f"[COLMAP]   • CPU threads: {multiprocessing.cpu_count()}")
     print(f"[COLMAP]   • GPU acceleration: ENABLED")
     
     run_cmd(cmd)
-    print(f"[COLMAP] 🎉 ULTRA-FAST CUDA GPU-accelerated feature extraction completed!")
-    print(f"[COLMAP] Expected speed improvement: 3-5x faster than default settings")
+    print(f"[COLMAP] 🎉 BALANCED CUDA GPU-accelerated feature extraction completed!")
+    print(f"[COLMAP] Expected speed improvement: 2-3x faster than default settings")
+    print(f"[COLMAP] Note: Balanced for quality to prevent downstream crashes")
     
     # Validate that features were actually extracted
     if not os.path.exists(database_path):
