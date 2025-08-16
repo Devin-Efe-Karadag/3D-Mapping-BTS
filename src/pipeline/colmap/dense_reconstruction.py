@@ -171,8 +171,8 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
         "--workspace_format", "COLMAP",
         "--PatchMatchStereo.max_image_size", str(dense_image_size),
         "--PatchMatchStereo.window_radius", str(window_radius),
-        "--PatchMatchStereo.window_step", str(window_step),
-        "--PatchMatchStereo.gpu_index", "0"  # Use first GPU
+        "--PatchMatchStereo.window_step", str(window_step)
+        # GPU acceleration is automatic when CUDA is available
     ])
     print(f"[COLMAP] Dense stereo reconstruction completed")
     
@@ -186,8 +186,8 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
         "--workspace_path", dense_folder,
         "--workspace_format", "COLMAP",
         "--input_type", "geometric",
-        "--output_path", os.path.join(fused_folder, "fused.ply"),
-        "--StereoFusion.gpu_index", "0"  # Use first GPU
+        "--output_path", os.path.join(fused_folder, "fused.ply")
+        # GPU acceleration is automatic when CUDA is available
     ])
     print(f"[COLMAP] Dense fusion completed")
     
@@ -199,8 +199,8 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
     run_cmd([
         colmap_cmd, "poisson_mesher",
         "--input_path", os.path.join(fused_folder, "fused.ply"),
-        "--output_path", os.path.join(mesh_folder, "mesh.ply"),
-        "--PoissonMesher.gpu_index", "0"  # Use first GPU
+        "--output_path", os.path.join(mesh_folder, "mesh.ply")
+        # GPU acceleration is automatic when CUDA is available
     ])
     print(f"[COLMAP] Mesh creation completed")
     

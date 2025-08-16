@@ -69,18 +69,18 @@ def feature_extraction(database_path, images_folder):
     max_image_size = getattr(config, 'colmap_params', {}).get('max_image_size', 1600)
     max_features = getattr(config, 'colmap_params', {}).get('max_features', 2048)
     
-    # Run feature extraction with GPU acceleration
-    print(f"[COLMAP] Running GPU-accelerated feature extraction...")
+    # Run feature extraction with GPU acceleration (automatic)
+    print(f"[COLMAP] Running feature extraction (GPU acceleration automatic if CUDA available)...")
     run_cmd([
         colmap_cmd, "feature_extractor",
         "--database_path", database_path,
         "--image_path", images_folder,
         "--ImageReader.camera_model", "PINHOLE",
         "--SiftExtraction.max_image_size", str(max_image_size),
-        "--SiftExtraction.max_num_features", str(max_features),
-        "--SiftExtraction.gpu_index", "0"  # Use first GPU device
+        "--SiftExtraction.max_num_features", str(max_features)
+        # GPU acceleration is automatic when CUDA is available
     ])
-    print(f"[COLMAP] GPU-accelerated feature extraction completed")
+    print(f"[COLMAP] Feature extraction completed")
     
     # Validate that features were actually extracted
     if not os.path.exists(database_path):

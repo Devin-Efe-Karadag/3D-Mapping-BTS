@@ -29,7 +29,7 @@ def mapping(database_path, images_folder, sparse_folder):
     max_iterations = getattr(config, 'colmap_params', {}).get('max_iterations', 50)
     max_refinements = getattr(config, 'colmap_params', {}).get('max_refinements', 3)
     
-    # Optimized mapping with GPU acceleration
+    # Optimized mapping (GPU acceleration automatic)
     run_cmd([
         colmap_cmd, "mapper",
         "--database_path", database_path,
@@ -37,8 +37,8 @@ def mapping(database_path, images_folder, sparse_folder):
         "--output_path", sparse_folder,
         "--Mapper.ba_global_max_num_iterations", str(max_iterations),
         "--Mapper.ba_global_max_refinements", str(max_refinements),
-        "--Mapper.min_num_matches", str(min_matches),
-        "--Mapper.gpu_index", "0"  # Use first GPU device for bundle adjustment
+        "--Mapper.min_num_matches", str(min_matches)
+        # GPU acceleration is automatic when CUDA is available
     ])
     print(f"[COLMAP] Sparse reconstruction completed")
 
@@ -67,7 +67,7 @@ def image_undistortion(images_folder, sparse_folder, dense_folder):
         "--image_path", images_folder,
         "--input_path", os.path.join(sparse_folder, "0"),
         "--output_path", dense_folder,
-        "--output_type", "COLMAP",
-        "--ImageUndistorter.gpu_index", "0"  # Use first GPU
+        "--output_type", "COLMAP"
+        # GPU acceleration is automatic when CUDA is available
     ])
     print(f"[COLMAP] Image undistortion completed") 
