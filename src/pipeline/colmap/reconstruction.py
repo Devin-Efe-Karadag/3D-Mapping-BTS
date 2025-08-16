@@ -38,7 +38,7 @@ def mapping(database_path, images_folder, sparse_folder):
         "--Mapper.ba_global_max_num_iterations", str(max_iterations),
         "--Mapper.ba_global_max_refinements", str(max_refinements),
         "--Mapper.min_num_matches", str(min_matches),
-        "--Mapper.use_gpu", "1"  # Enable GPU acceleration for bundle adjustment
+        "--Mapper.gpu_index", "0"  # Use first GPU device for bundle adjustment
     ])
     print(f"[COLMAP] Sparse reconstruction completed")
 

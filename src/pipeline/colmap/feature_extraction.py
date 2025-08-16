@@ -69,52 +69,18 @@ def feature_extraction(database_path, images_folder):
     max_image_size = getattr(config, 'colmap_params', {}).get('max_image_size', 1600)
     max_features = getattr(config, 'colmap_params', {}).get('max_features', 2048)
     
-    # Run feature extraction with robust parameters and GPU acceleration
-    try:
-        print(f"[COLMAP] Trying GPU-accelerated feature extraction...")
-        run_cmd([
-            colmap_cmd, "feature_extractor",
-            "--database_path", database_path,
-            "--image_path", images_folder,
-            "--ImageReader.camera_model", "PINHOLE",
-            "--SiftExtraction.max_image_size", str(max_image_size),
-            "--SiftExtraction.max_num_features", str(max_features),
-            "--SiftExtraction.use_gpu", "1"  # Enable GPU acceleration
-        ])
-        print(f"[COLMAP] GPU-accelerated feature extraction completed")
-    except Exception as gpu_error:
-        print(f"[COLMAP] GPU feature extraction failed (likely OpenGL context issue): {gpu_error}")
-        print(f"[COLMAP] Falling back to CPU feature extraction...")
-        
-        # Fallback: CPU feature extraction with more permissive parameters
-        try:
-            run_cmd([
-                colmap_cmd, "feature_extractor",
-                "--database_path", database_path,
-                "--image_path", images_folder,
-                "--ImageReader.camera_model", "PINHOLE",
-                "--SiftExtraction.max_image_size", str(max_image_size),
-                "--SiftExtraction.max_num_features", str(max_features),
-                "--SiftExtraction.use_gpu", "0"  # Force CPU extraction
-            ])
-            print(f"[COLMAP] CPU feature extraction completed")
-        except Exception as e:
-            print(f"[COLMAP] Standard CPU feature extraction failed: {e}")
-            print(f"[COLMAP] Trying fallback parameters with CPU...")
-            
-            # Final fallback: More permissive parameters with CPU
-            run_cmd([
-                colmap_cmd, "feature_extractor",
-                "--database_path", database_path,
-                "--image_path", images_folder,
-                "--ImageReader.camera_model", "PINHOLE",
-                "--SiftExtraction.max_image_size", "3200",  # Larger images
-                "--SiftExtraction.max_num_features", "4096",  # More features
-                "--SiftExtraction.edge_threshold", "10",  # Lower edge threshold
-                "--SiftExtraction.peak_threshold", "0.01",  # Lower peak threshold
-                "--SiftExtraction.use_gpu", "0"  # Force CPU extraction
-            ])
-            print(f"[COLMAP] CPU fallback feature extraction completed")
+    # Run feature extraction with GPU acceleration
+    print(f"[COLMAP] Running GPU-accelerated feature extraction...")
+    run_cmd([
+        colmap_cmd, "feature_extractor",
+        "--database_path", database_path,
+        "--image_path", images_folder,
+        "--ImageReader.camera_model", "PINHOLE",
+        "--SiftExtraction.max_image_size", str(max_image_size),
+        "--SiftExtraction.max_num_features", str(max_features),
+        "--SiftGPUIndex", "0"  # Use first GPU device
+    ])
+    print(f"[COLMAP] GPU-accelerated feature extraction completed")
     
     # Validate that features were actually extracted
     if not os.path.exists(database_path):

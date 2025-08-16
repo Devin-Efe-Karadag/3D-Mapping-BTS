@@ -30,22 +30,8 @@ def run_cmd(cmd, cwd=None):
     return result
 
 def sequential_matching(database_path):
-    """Perform sequential matching between images"""
+    """Perform sequential matching with GPU acceleration"""
     print(f"[COLMAP] Starting sequential matching")
-    
-    # Validate database before matching
-    if not os.path.exists(database_path):
-        print(f"[COLMAP][ERROR] Database not found: {database_path}")
-        sys.exit(1)
-    
-    # Check database size to ensure it's not empty
-    db_size = os.path.getsize(database_path)
-    if db_size < 1024:  # Less than 1KB
-        print(f"[COLMAP][ERROR] Database appears to be empty or corrupted: {database_path} (size: {db_size} bytes)")
-        sys.exit(1)
-    
-    print(f"[COLMAP] Database validated: {database_path} (size: {db_size} bytes)")
-    
     # Use config for COLMAP path
     colmap_cmd = config.colmap_path or "colmap"
     
@@ -53,38 +39,20 @@ def sequential_matching(database_path):
     max_ratio = getattr(config, 'colmap_params', {}).get('max_ratio', 0.8)
     max_distance = getattr(config, 'colmap_params', {}).get('max_distance', 0.7)
     
-    # Try GPU matching first, fallback to CPU if GPU fails
-    try:
-        print(f"[COLMAP] Trying GPU-accelerated sequential matching...")
-        run_cmd([
-            colmap_cmd, "sequential_matcher",
-            "--database_path", database_path,
-            "--SiftMatching.use_gpu", "1",  # Enable GPU acceleration
-            "--SiftMatching.max_ratio", str(max_ratio),
-            "--SiftMatching.max_distance", str(max_distance),
-            "--SiftMatching.cross_check", "1",
-            "--SiftMatching.max_num_matches", "32768",  # Increase max matches
-            "--SiftMatching.max_num_trials", "10000",   # Increase trials
-            "--SiftMatching.min_inlier_ratio", "0.25"   # Lower inlier ratio
-        ])
-        print(f"[COLMAP] GPU-accelerated sequential matching completed")
-    except Exception as gpu_error:
-        print(f"[COLMAP] GPU matching failed (likely OpenGL context issue): {gpu_error}")
-        print(f"[COLMAP] Falling back to CPU matching...")
-        
-        # Fallback: CPU matching
-        run_cmd([
-            colmap_cmd, "sequential_matcher",
-            "--database_path", database_path,
-            "--SiftMatching.use_gpu", "0",  # Force CPU matching
-            "--SiftMatching.max_ratio", str(max_ratio),
-            "--SiftMatching.max_distance", str(max_distance),
-            "--SiftMatching.cross_check", "1",
-            "--SiftMatching.max_num_matches", "32768",  # Increase max matches
-            "--SiftMatching.max_num_trials", "10000",   # Increase trials
-            "--SiftMatching.min_inlier_ratio", "0.25"   # Lower inlier ratio
-        ])
-        print(f"[COLMAP] CPU fallback sequential matching completed")
+    # Run GPU-accelerated sequential matching
+    print(f"[COLMAP] Running GPU-accelerated sequential matching...")
+    run_cmd([
+        colmap_cmd, "sequential_matcher",
+        "--database_path", database_path,
+        "--SiftGPUIndex", "0",  # Use first GPU device
+        "--SiftMatching.max_ratio", str(max_ratio),
+        "--SiftMatching.max_distance", str(max_distance),
+        "--SiftMatching.cross_check", "1",
+        "--SiftMatching.max_num_matches", "32768",  # Increase max matches
+        "--SiftMatching.max_num_trials", "10000",   # Increase trials
+        "--SiftMatching.min_inlier_ratio", "0.25"   # Lower inlier ratio
+    ])
+    print(f"[COLMAP] GPU-accelerated sequential matching completed")
 
 def robust_sequential_matching(database_path):
     """Perform sequential matching with fallback strategies"""
@@ -97,37 +65,20 @@ def robust_sequential_matching(database_path):
         print(f"[COLMAP] Standard sequential matching failed: {e}")
         print(f"[COLMAP] Trying fallback matching strategy...")
         
-        # Fallback: Try GPU matching first, then CPU if GPU fails
+        # Fallback: Try exhaustive matching with GPU
         colmap_cmd = config.colmap_path or "colmap"
-        try:
-            print(f"[COLMAP] Trying GPU-accelerated exhaustive matching...")
-            run_cmd([
-                colmap_cmd, "exhaustive_matcher",
-                "--database_path", database_path,
-                "--SiftMatching.use_gpu", "1",  # Enable GPU acceleration
-                "--SiftMatching.max_ratio", "0.9",  # More permissive
-                "--SiftMatching.max_distance", "1.0",  # More permissive
-                "--SiftMatching.cross_check", "1",
-                "--SiftMatching.max_num_matches", "65536",  # Even more matches
-                "--SiftMatching.max_num_trials", "20000"
-            ])
-            print(f"[COLMAP] GPU-accelerated exhaustive matching completed")
-        except Exception as gpu_error:
-            print(f"[COLMAP] GPU matching failed (likely OpenGL context issue): {gpu_error}")
-            print(f"[COLMAP] Falling back to CPU matching...")
-            
-            # Final fallback: CPU matching
-            run_cmd([
-                colmap_cmd, "exhaustive_matcher",
-                "--database_path", database_path,
-                "--SiftMatching.use_gpu", "0",  # Force CPU matching
-                "--SiftMatching.max_ratio", "0.9",  # More permissive
-                "--SiftMatching.max_distance", "1.0",  # More permissive
-                "--SiftMatching.cross_check", "1",
-                "--SiftMatching.max_num_matches", "65536",  # Even more matches
-                "--SiftMatching.max_num_trials", "20000"
-            ])
-            print(f"[COLMAP] CPU fallback exhaustive matching completed")
+        print(f"[COLMAP] Running GPU-accelerated exhaustive matching...")
+        run_cmd([
+            colmap_cmd, "exhaustive_matcher",
+            "--database_path", database_path,
+            "--SiftGPUIndex", "0",  # Use first GPU device
+            "--SiftMatching.max_ratio", "0.9",  # More permissive
+            "--SiftMatching.max_distance", "1.0",  # More permissive
+            "--SiftMatching.cross_check", "1",
+            "--SiftMatching.max_num_matches", "65536",  # Even more matches
+            "--SiftMatching.max_num_trials", "20000"
+        ])
+        print(f"[COLMAP] GPU-accelerated exhaustive matching completed")
 
 def spatial_matching(database_path):
     """Perform spatial matching for better coverage"""
@@ -135,31 +86,15 @@ def spatial_matching(database_path):
     # Use config for COLMAP path
     colmap_cmd = config.colmap_path or "colmap"
     
-    # Try GPU matching first, fallback to CPU if GPU fails
-    try:
-        print(f"[COLMAP] Trying GPU-accelerated spatial matching...")
-        run_cmd([
-            colmap_cmd, "spatial_matcher",
-            "--database_path", database_path,
-            "--SiftMatching.use_gpu", "1",  # Enable GPU acceleration
-            "--SpatialMatching.max_num_neighbors", "50",
-            "--SiftMatching.max_num_matches", "32768",  # Increase max matches
-            "--SiftMatching.max_num_trials", "10000",   # Increase trials
-            "--SiftMatching.min_inlier_ratio", "0.25"   # Lower inlier ratio
-        ])
-        print(f"[COLMAP] GPU-accelerated spatial matching completed")
-    except Exception as gpu_error:
-        print(f"[COLMAP] GPU matching failed (likely OpenGL context issue): {gpu_error}")
-        print(f"[COLMAP] Falling back to CPU matching...")
-        
-        # Fallback: CPU matching
-        run_cmd([
-            colmap_cmd, "spatial_matcher",
-            "--database_path", database_path,
-            "--SiftMatching.use_gpu", "0",  # Force CPU matching
-            "--SpatialMatching.max_num_neighbors", "50",
-            "--SiftMatching.max_num_matches", "32768",  # Increase max matches
-            "--SiftMatching.max_num_trials", "10000",   # Increase trials
-            "--SiftMatching.min_inlier_ratio", "0.25"   # Lower inlier ratio
-        ])
-        print(f"[COLMAP] CPU fallback spatial matching completed") 
+    # Run GPU-accelerated spatial matching
+    print(f"[COLMAP] Running GPU-accelerated spatial matching...")
+    run_cmd([
+        colmap_cmd, "spatial_matcher",
+        "--database_path", database_path,
+        "--SiftGPUIndex", "0",  # Use first GPU device
+        "--SpatialMatching.max_num_neighbors", "50",
+        "--SiftMatching.max_num_matches", "32768",  # Increase max matches
+        "--SiftMatching.max_num_trials", "10000",   # Increase trials
+        "--SiftMatching.min_inlier_ratio", "0.25"   # Lower inlier ratio
+    ])
+    print(f"[COLMAP] GPU-accelerated spatial matching completed") 
