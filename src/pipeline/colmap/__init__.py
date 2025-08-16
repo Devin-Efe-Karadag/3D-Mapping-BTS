@@ -2,15 +2,15 @@
 COLMAP Pipeline Module
 """
 from .feature_extraction import feature_extraction
-from .matching import exhaustive_matching, spatial_matching
+from .matching import sequential_matching, transitive_matching
 from .reconstruction import mapping, model_conversion, image_undistortion
 from .dense_reconstruction import check_cuda_availability, run_colmap_pipeline_with_dense
 from .mesh_creation import run_colmap_pipeline
 
 __all__ = [
     'feature_extraction',
-    'exhaustive_matching',
-    'spatial_matching', 
+    'sequential_matching',
+    'transitive_matching', 
     'mapping',
     'model_conversion',
     'image_undistortion',
