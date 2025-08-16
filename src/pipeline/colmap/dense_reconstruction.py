@@ -264,39 +264,36 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
     print(f"[COLMAP] Expected speed improvement: 2-4x faster than default settings")
     
     # Mesh creation
-    print(f"[COLMAP] Creating ULTRA-FAST mesh from point cloud")
+    print(f"[COLMAP] Creating mesh from point cloud")
     mesh_folder = os.path.join(output_folder, "mesh")
     os.makedirs(mesh_folder, exist_ok=True)
     
-    # STABLE SPEED OPTIMIZATION PARAMETERS FOR POISSON MESHING
-    # Using more conservative values to prevent crashes while maintaining speed
-    print(f"[COLMAP] 🚀 Using STABLE speed optimization for Poisson meshing:")
+    # Use DEFAULT values for maximum stability
+    print(f"[COLMAP] Using DEFAULT Poisson meshing parameters for maximum stability:")
     print(f"[COLMAP]   - CPU optimization: ALL CPU cores")
-    print(f"[COLMAP]   - Depth optimization: BALANCED speed/stability")
-    print(f"[COLMAP]   - Color optimization: BALANCED quality/speed")
+    print(f"[COLMAP]   - All other parameters: DEFAULT values (stable)")
     
-    # Build command with STABLE speed optimization options
+    # Build command with DEFAULT values for stability
     run_cmd([
         colmap_cmd, "poisson_mesher",
         "--input_path", os.path.join(fused_folder, "fused.ply"),
         "--output_path", os.path.join(mesh_folder, "mesh.ply"),
-        # STABLE POISSON MESHING OPTIMIZATIONS FOR RELIABLE SPEED
-        "--PoissonMeshing.point_weight", "1",  # Keep default
-        "--PoissonMeshing.depth", "12",  # Reduced from 13 = faster, but stable
-        "--PoissonMeshing.color", "28",  # Reduced from 32 = faster, but stable
-        "--PoissonMeshing.trim", "9",  # Reduced from 10 = faster, but stable
+        # Use DEFAULT values for maximum stability
+        "--PoissonMeshing.point_weight", "1",  # Default
+        "--PoissonMeshing.depth", "13",  # Default = 13
+        "--PoissonMeshing.color", "32",  # Default = 32
+        "--PoissonMeshing.trim", "10",  # Default = 10
         "--PoissonMeshing.num_threads", str(multiprocessing.cpu_count())  # Use all CPU cores
     ])
     
-    print(f"[COLMAP] Speed optimization summary:")
-    print(f"[COLMAP]   • Depth: 12 (vs default 13) = 1.5x faster")
-    print(f"[COLMAP]   • Color: 28 (vs default 32) = 1.2x faster")
-    print(f"[COLMAP]   • Trim: 9 (vs default 10) = faster trimming")
+    print(f"[COLMAP] Parameter summary:")
+    print(f"[COLMAP]   • Depth: 13 (default)")
+    print(f"[COLMAP]   • Color: 32 (default)")
+    print(f"[COLMAP]   • Trim: 10 (default)")
     print(f"[COLMAP]   • CPU threads: {multiprocessing.cpu_count()}")
     
-    print(f"[COLMAP] 🎉 STABLE mesh creation completed!")
-    print(f"[COLMAP] Expected speed improvement: 1.5-2x faster than default settings")
-    print(f"[COLMAP] Note: Using stable parameters to prevent crashes")
+    print(f"[COLMAP] Mesh creation completed!")
+    print(f"[COLMAP] Note: Using default parameters for maximum stability")
     
             # Convert to OBJ format for 3D mesh analysis
     obj_file = os.path.join(mesh_folder, "model.obj")
