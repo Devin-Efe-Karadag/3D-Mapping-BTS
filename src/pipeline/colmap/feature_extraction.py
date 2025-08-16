@@ -71,14 +71,29 @@ def feature_extraction(database_path, images_folder):
     
     # Run feature extraction with GPU acceleration (automatic)
     print(f"[COLMAP] Running feature extraction (GPU acceleration automatic if CUDA available)...")
-    run_cmd([
+    
+    # Build command with essential options
+    cmd = [
         colmap_cmd, "feature_extractor",
         "--database_path", database_path,
         "--image_path", images_folder,
         "--ImageReader.camera_model", "PINHOLE"
-        # Use only essential options to avoid compatibility issues
-        # GPU acceleration is automatic when CUDA is available
-    ])
+    ]
+    
+    # Add SiftExtraction options if they're supported (try-catch approach)
+    try:
+        # Test if SiftExtraction options are supported
+        test_cmd = [colmap_cmd, "feature_extractor", "--help"]
+        result = subprocess.run(test_cmd, capture_output=True, text=True, timeout=10)
+        if "--SiftExtraction.max_image_size" in result.stdout:
+            cmd.extend(["--SiftExtraction.max_image_size", str(max_image_size)])
+        if "--SiftExtraction.max_num_features" in result.stdout:
+            cmd.extend(["--SiftExtraction.max_num_features", str(max_features)])
+    except:
+        # If help command fails, just use basic options
+        pass
+    
+    run_cmd(cmd)
     print(f"[COLMAP] Feature extraction completed")
     
     # Validate that features were actually extracted

@@ -41,11 +41,35 @@ def sequential_matching(database_path):
     
     # Run sequential matching (GPU acceleration automatic)
     print(f"[COLMAP] Running sequential matching (GPU acceleration automatic if CUDA available)...")
-    run_cmd([
+    
+    # Build command with essential options
+    cmd = [
         colmap_cmd, "sequential_matcher",
         "--database_path", database_path
-        # Use only essential options to avoid compatibility issues
-    ])
+    ]
+    
+    # Add SiftMatching options if they're supported (try-catch approach)
+    try:
+        # Test if SiftMatching options are supported
+        test_cmd = [colmap_cmd, "sequential_matcher", "--help"]
+        result = subprocess.run(test_cmd, capture_output=True, text=True, timeout=10)
+        if "--SiftMatching.max_ratio" in result.stdout:
+            cmd.extend(["--SiftMatching.max_ratio", str(max_ratio)])
+        if "--SiftMatching.max_distance" in result.stdout:
+            cmd.extend(["--SiftMatching.max_distance", str(max_distance)])
+        if "--SiftMatching.cross_check" in result.stdout:
+            cmd.extend(["--SiftMatching.cross_check", "1"])
+        if "--SiftMatching.max_num_matches" in result.stdout:
+            cmd.extend(["--SiftMatching.max_num_matches", "32768"])
+        if "--SiftMatching.max_num_trials" in result.stdout:
+            cmd.extend(["--SiftMatching.max_num_trials", "10000"])
+        if "--SiftMatching.min_inlier_ratio" in result.stdout:
+            cmd.extend(["--SiftMatching.min_inlier_ratio", "0.25"])
+    except:
+        # If help command fails, just use basic options
+        pass
+    
+    run_cmd(cmd)
     print(f"[COLMAP] Sequential matching completed")
 
 def robust_sequential_matching(database_path):
@@ -62,11 +86,33 @@ def robust_sequential_matching(database_path):
         # Fallback: Try exhaustive matching
         colmap_cmd = config.colmap_path or "colmap"
         print(f"[COLMAP] Running exhaustive matching...")
-        run_cmd([
+        
+        # Build command with essential options
+        cmd = [
             colmap_cmd, "exhaustive_matcher",
             "--database_path", database_path
-            # Use only essential options to avoid compatibility issues
-        ])
+        ]
+        
+        # Add SiftMatching options if they're supported (try-catch approach)
+        try:
+            # Test if SiftMatching options are supported
+            test_cmd = [colmap_cmd, "exhaustive_matcher", "--help"]
+            result = subprocess.run(test_cmd, capture_output=True, text=True, timeout=10)
+            if "--SiftMatching.max_ratio" in result.stdout:
+                cmd.extend(["--SiftMatching.max_ratio", "0.9"])
+            if "--SiftMatching.max_distance" in result.stdout:
+                cmd.extend(["--SiftMatching.max_distance", "1.0"])
+            if "--SiftMatching.cross_check" in result.stdout:
+                cmd.extend(["--SiftMatching.cross_check", "1"])
+            if "--SiftMatching.max_num_matches" in result.stdout:
+                cmd.extend(["--SiftMatching.max_num_matches", "65536"])
+            if "--SiftMatching.max_num_trials" in result.stdout:
+                cmd.extend(["--SiftMatching.max_num_trials", "20000"])
+        except:
+            # If help command fails, just use basic options
+            pass
+        
+        run_cmd(cmd)
         print(f"[COLMAP] Exhaustive matching completed")
 
 def spatial_matching(database_path):
@@ -77,11 +123,31 @@ def spatial_matching(database_path):
     
     # Run spatial matching (GPU acceleration automatic)
     print(f"[COLMAP] Running spatial matching (GPU acceleration automatic if CUDA available)...")
-    run_cmd([
+    
+    # Build command with essential options
+    cmd = [
         colmap_cmd, "spatial_matcher",
         "--database_path", database_path
-        # Use only essential options to avoid compatibility issues
-    ])
+    ]
+    
+    # Add SiftMatching options if they're supported (try-catch approach)
+    try:
+        # Test if SiftMatching options are supported
+        test_cmd = [colmap_cmd, "spatial_matcher", "--help"]
+        result = subprocess.run(test_cmd, capture_output=True, text=True, timeout=10)
+        if "--SpatialMatching.max_num_neighbors" in result.stdout:
+            cmd.extend(["--SpatialMatching.max_num_neighbors", "50"])
+        if "--SiftMatching.max_num_matches" in result.stdout:
+            cmd.extend(["--SiftMatching.max_num_matches", "32768"])
+        if "--SiftMatching.max_num_trials" in result.stdout:
+            cmd.extend(["--SiftMatching.max_num_trials", "10000"])
+        if "--SiftMatching.min_inlier_ratio" in result.stdout:
+            cmd.extend(["--SiftMatching.min_inlier_ratio", "0.25"])
+    except:
+        # If help command fails, just use basic options
+        pass
+    
+    run_cmd(cmd)
     print(f"[COLMAP] Spatial matching completed")
 
 # Keep exhaustive matching as a separate function
@@ -97,11 +163,35 @@ def exhaustive_matching(database_path):
     
     # Run exhaustive matching (GPU acceleration automatic)
     print(f"[COLMAP] Running exhaustive matching (GPU acceleration automatic if CUDA available)...")
-    run_cmd([
+    
+    # Build command with essential options
+    cmd = [
         colmap_cmd, "exhaustive_matcher",
         "--database_path", database_path
-        # Use only essential options to avoid compatibility issues
-    ])
+    ]
+    
+    # Add SiftMatching options if they're supported (try-catch approach)
+    try:
+        # Test if SiftMatching options are supported
+        test_cmd = [colmap_cmd, "exhaustive_matcher", "--help"]
+        result = subprocess.run(test_cmd, capture_output=True, text=True, timeout=10)
+        if "--SiftMatching.max_ratio" in result.stdout:
+            cmd.extend(["--SiftMatching.max_ratio", str(max_ratio)])
+        if "--SiftMatching.max_distance" in result.stdout:
+            cmd.extend(["--SiftMatching.max_distance", str(max_distance)])
+        if "--SiftMatching.cross_check" in result.stdout:
+            cmd.extend(["--SiftMatching.cross_check", "1"])
+        if "--SiftMatching.max_num_matches" in result.stdout:
+            cmd.extend(["--SiftMatching.max_num_matches", "32768"])
+        if "--SiftMatching.max_num_trials" in result.stdout:
+            cmd.extend(["--SiftMatching.max_num_trials", "10000"])
+        if "--SiftMatching.min_inlier_ratio" in result.stdout:
+            cmd.extend(["--SiftMatching.min_inlier_ratio", "0.25"])
+    except:
+        # If help command fails, just use basic options
+        pass
+    
+    run_cmd(cmd)
     print(f"[COLMAP] Exhaustive matching completed")
 
 def robust_matching(database_path):
@@ -118,9 +208,31 @@ def robust_matching(database_path):
         # Fallback: Try more permissive parameters
         colmap_cmd = config.colmap_path or "colmap"
         print(f"[COLMAP] Running exhaustive matching with permissive parameters...")
-        run_cmd([
+        
+        # Build command with essential options
+        cmd = [
             colmap_cmd, "exhaustive_matcher",
             "--database_path", database_path
-            # Use only essential options to avoid compatibility issues
-        ])
+        ]
+        
+        # Add SiftMatching options if they're supported (try-catch approach)
+        try:
+            # Test if SiftMatching options are supported
+            test_cmd = [colmap_cmd, "exhaustive_matcher", "--help"]
+            result = subprocess.run(test_cmd, capture_output=True, text=True, timeout=10)
+            if "--SiftMatching.max_ratio" in result.stdout:
+                cmd.extend(["--SiftMatching.max_ratio", "0.9"])
+            if "--SiftMatching.max_distance" in result.stdout:
+                cmd.extend(["--SiftMatching.max_distance", "1.0"])
+            if "--SiftMatching.cross_check" in result.stdout:
+                cmd.extend(["--SiftMatching.cross_check", "1"])
+            if "--SiftMatching.max_num_matches" in result.stdout:
+                cmd.extend(["--SiftMatching.max_num_matches", "65536"])
+            if "--SiftMatching.max_num_trials" in result.stdout:
+                cmd.extend(["--SiftMatching.max_num_trials", "20000"])
+        except:
+            # If help command fails, just use basic options
+            pass
+        
+        run_cmd(cmd)
         print(f"[COLMAP] Exhaustive matching with permissive parameters completed") 

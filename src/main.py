@@ -17,6 +17,10 @@ def parse_arguments():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(description='3D Reconstruction Pipeline')
     
+    # Pipeline modes
+    parser.add_argument('--fast-mode', action='store_true',
+                       help='Run in fast mode with lower resolution for faster processing')
+    
     # COLMAP parameters
     parser.add_argument('--max-image-size', type=int, default=1600,
                        help='Maximum image size for feature extraction (default: 1600)')
@@ -74,22 +78,48 @@ if warnings:
 # Parse command line arguments
 args = parse_arguments()
 
-# Update config with command line arguments
+# Apply fast mode if requested
+if args.fast_mode:
+    print("🚀 Fast mode enabled - using lower resolution for faster processing")
+    # Override parameters with fast mode values
+    fast_mode_params = {
+        'max_image_size': 800,      # Lower resolution for feature extraction
+        'max_features': 1024,       # Fewer features for faster processing
+        'max_ratio': 0.9,           # More permissive matching
+        'max_distance': 1.0,        # More permissive matching
+        'min_matches': 10,          # Lower threshold for reconstruction
+        'max_iterations': 25,       # Fewer iterations for faster convergence
+        'max_refinements': 2,       # Fewer refinements
+        'dense_image_size': 1000,   # Lower resolution for dense reconstruction
+        'window_radius': 3,         # Smaller window for faster stereo
+        'window_step': 1,           # Smaller step for faster stereo
+        'gpu_index': 0,             # GPU device index to use
+        'use_gpu': True             # Enable GPU acceleration
+    }
+    config.colmap_params = fast_mode_params
+    print("Fast mode parameters applied:")
+    for key, value in fast_mode_params.items():
+        print(f"  {key}: {value}")
+    print()
+else:
+    # Use command line arguments for normal mode
+    config.colmap_params = {
+        'max_image_size': args.max_image_size,
+        'max_features': args.max_features,
+        'max_ratio': args.max_ratio,
+        'max_distance': args.max_distance,
+        'min_matches': args.min_matches,
+        'max_iterations': args.max_iterations,
+        'max_refinements': args.max_refinements,
+        'dense_image_size': args.dense_image_size,
+        'window_radius': args.window_radius,
+        'window_step': args.window_step,
+        'gpu_index': 0,  # GPU device index to use
+        'use_gpu': True   # Enable GPU acceleration
+    }
+
+# Update timestamps config
 config.timestamps = args.timestamps
-config.colmap_params = {
-    'max_image_size': args.max_image_size,
-    'max_features': args.max_features,
-    'max_ratio': args.max_ratio,
-    'max_distance': args.max_distance,
-    'min_matches': args.min_matches,
-    'max_iterations': args.max_iterations,
-    'max_refinements': args.max_refinements,
-    'dense_image_size': args.dense_image_size,
-    'window_radius': args.window_radius,
-    'window_step': args.window_step,
-    'gpu_index': 0,  # GPU device index to use
-    'use_gpu': True   # Enable GPU acceleration
-}
 
 # Print current configuration
 config.print_setup_info()
@@ -182,6 +212,17 @@ def main():
     for i, mesh in enumerate(timestamp_meshes):
         print(f"  - Timestamp{i+1}: {mesh}")
     print(f"Custom 3D mesh comparison completed in: {comparison_dir}")
+    
+    # Show final mode and parameters
+    if args.fast_mode:
+        print("\n🚀 Pipeline completed in FAST MODE")
+        print("   - Lower resolution for faster processing")
+        print("   - All functionality preserved")
+        print("   - Use without --fast-mode for higher quality")
+    else:
+        print("\n📊 Pipeline completed in STANDARD MODE")
+        print("   - Standard resolution and quality")
+        print("   - Use --fast-mode for faster processing")
 
 if __name__ == "__main__":
     main() 

@@ -30,14 +30,32 @@ def mapping(database_path, images_folder, sparse_folder):
     max_refinements = getattr(config, 'colmap_params', {}).get('max_refinements', 3)
     
     # Optimized mapping (GPU acceleration automatic)
-    run_cmd([
+    print(f"[COLMAP] Using min_matches: {min_matches}, max_iterations: {max_iterations}, max_refinements: {max_refinements}")
+    
+    # Build command with essential options
+    cmd = [
         colmap_cmd, "mapper",
         "--database_path", database_path,
         "--image_path", images_folder,
         "--output_path", sparse_folder
-        # Use only essential options to avoid compatibility issues
-        # GPU acceleration is automatic when CUDA is available
-    ])
+    ]
+    
+    # Add Mapper options if they're supported (try-catch approach)
+    try:
+        # Test if Mapper options are supported
+        test_cmd = [colmap_cmd, "mapper", "--help"]
+        result = subprocess.run(test_cmd, capture_output=True, text=True, timeout=10)
+        if "--Mapper.min_num_matches" in result.stdout:
+            cmd.extend(["--Mapper.min_num_matches", str(min_matches)])
+        if "--Mapper.ba_global_max_num_iterations" in result.stdout:
+            cmd.extend(["--Mapper.ba_global_max_num_iterations", str(max_iterations)])
+        if "--Mapper.ba_global_max_refinements" in result.stdout:
+            cmd.extend(["--Mapper.ba_global_max_refinements", str(max_refinements)])
+    except:
+        # If help command fails, just use basic options
+        pass
+    
+    run_cmd(cmd)
     print(f"[COLMAP] Sparse reconstruction completed")
 
 def model_conversion(sparse_folder):

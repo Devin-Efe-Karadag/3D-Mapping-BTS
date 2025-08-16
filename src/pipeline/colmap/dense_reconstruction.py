@@ -165,13 +165,31 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
     window_radius = getattr(config, 'colmap_params', {}).get('window_radius', 5)
     window_step = getattr(config, 'colmap_params', {}).get('window_step', 2)
     
-    run_cmd([
+    print(f"[COLMAP] Using dense_image_size: {dense_image_size}, window_radius: {window_radius}, window_step: {window_step}")
+    
+    # Build command with essential options
+    cmd = [
         colmap_cmd, "patch_match_stereo",
         "--workspace_path", dense_folder,
         "--workspace_format", "COLMAP"
-        # Use only essential options to avoid compatibility issues
-        # GPU acceleration is automatic when CUDA is available
-    ])
+    ]
+    
+    # Add PatchMatchStereo options if they're supported (try-catch approach)
+    try:
+        # Test if PatchMatchStereo options are supported
+        test_cmd = [colmap_cmd, "patch_match_stereo", "--help"]
+        result = subprocess.run(test_cmd, capture_output=True, text=True, timeout=10)
+        if "--PatchMatchStereo.max_image_size" in result.stdout:
+            cmd.extend(["--PatchMatchStereo.max_image_size", str(dense_image_size)])
+        if "--PatchMatchStereo.window_radius" in result.stdout:
+            cmd.extend(["--PatchMatchStereo.window_radius", str(window_radius)])
+        if "--PatchMatchStereo.window_step" in result.stdout:
+            cmd.extend(["--PatchMatchStereo.window_step", str(window_step)])
+    except:
+        # If help command fails, just use basic options
+        pass
+    
+    run_cmd(cmd)
     print(f"[COLMAP] Dense stereo reconstruction completed")
     
     # Dense fusion
