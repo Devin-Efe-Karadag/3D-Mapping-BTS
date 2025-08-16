@@ -69,15 +69,17 @@ def feature_extraction(database_path, images_folder):
     max_image_size = getattr(config, 'colmap_params', {}).get('max_image_size', 1600)
     max_features = getattr(config, 'colmap_params', {}).get('max_features', 2048)
     
-    # Run feature extraction with GPU acceleration (automatic)
-    print(f"[COLMAP] Running feature extraction (GPU acceleration automatic if CUDA available)...")
+    # Run feature extraction with CUDA GPU acceleration
+    print(f"[COLMAP] Running CUDA GPU-accelerated feature extraction...")
     
     # Build command with essential options
     cmd = [
         colmap_cmd, "feature_extractor",
         "--database_path", database_path,
         "--image_path", images_folder,
-        "--ImageReader.camera_model", "PINHOLE"
+        "--ImageReader.camera_model", "PINHOLE",
+        "--FeatureExtraction.use_gpu", "1",  # Enable CUDA GPU acceleration
+        "--FeatureExtraction.gpu_index", "0"  # Use first CUDA GPU device
     ]
     
     # Add SiftExtraction options if they're supported (try-catch approach)
@@ -94,7 +96,7 @@ def feature_extraction(database_path, images_folder):
         pass
     
     run_cmd(cmd)
-    print(f"[COLMAP] Feature extraction completed")
+    print(f"[COLMAP] CUDA GPU-accelerated feature extraction completed")
     
     # Validate that features were actually extracted
     if not os.path.exists(database_path):

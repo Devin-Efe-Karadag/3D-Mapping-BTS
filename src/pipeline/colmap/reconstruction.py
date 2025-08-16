@@ -29,7 +29,7 @@ def mapping(database_path, images_folder, sparse_folder):
     max_iterations = getattr(config, 'colmap_params', {}).get('max_iterations', 50)
     max_refinements = getattr(config, 'colmap_params', {}).get('max_refinements', 3)
     
-    # Optimized mapping (GPU acceleration automatic)
+    # Optimized mapping with CUDA GPU acceleration
     print(f"[COLMAP] Using min_matches: {min_matches}, max_iterations: {max_iterations}, max_refinements: {max_refinements}")
     
     # Build command with essential options
@@ -37,7 +37,9 @@ def mapping(database_path, images_folder, sparse_folder):
         colmap_cmd, "mapper",
         "--database_path", database_path,
         "--image_path", images_folder,
-        "--output_path", sparse_folder
+        "--output_path", sparse_folder,
+        "--Mapper.ba_use_gpu", "1",  # Enable CUDA GPU acceleration for bundle adjustment
+        "--Mapper.ba_gpu_index", "0"  # Use first CUDA GPU device
     ]
     
     # Add Mapper options if they're supported (try-catch approach)
@@ -56,7 +58,7 @@ def mapping(database_path, images_folder, sparse_folder):
         pass
     
     run_cmd(cmd)
-    print(f"[COLMAP] Sparse reconstruction completed")
+    print(f"[COLMAP] CUDA GPU-accelerated sparse reconstruction completed")
 
 def model_conversion(sparse_folder):
     """Convert model to TXT format"""

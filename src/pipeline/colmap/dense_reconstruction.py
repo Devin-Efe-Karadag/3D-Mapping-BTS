@@ -171,7 +171,8 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
     cmd = [
         colmap_cmd, "patch_match_stereo",
         "--workspace_path", dense_folder,
-        "--workspace_format", "COLMAP"
+        "--workspace_format", "COLMAP",
+        "--PatchMatchStereo.gpu_index", "0"  # Use first CUDA GPU device
     ]
     
     # Add PatchMatchStereo options if they're supported (try-catch approach)
@@ -190,7 +191,7 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
         pass
     
     run_cmd(cmd)
-    print(f"[COLMAP] Dense stereo reconstruction completed")
+    print(f"[COLMAP] CUDA GPU-accelerated dense stereo reconstruction completed")
     
     # Dense fusion
     print(f"[COLMAP] Starting dense fusion")
