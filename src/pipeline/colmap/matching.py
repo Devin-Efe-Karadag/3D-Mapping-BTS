@@ -29,9 +29,9 @@ def run_cmd(cmd, cwd=None):
     print(f"[COLMAP] Command completed successfully")
     return result
 
-def sequential_matching(database_path):
-    """Perform sequential matching with GPU acceleration"""
-    print(f"[COLMAP] Starting sequential matching")
+def exhaustive_matching(database_path):
+    """Perform exhaustive matching with GPU acceleration"""
+    print(f"[COLMAP] Starting exhaustive matching")
     # Use config for COLMAP path
     colmap_cmd = config.colmap_path or "colmap"
     
@@ -39,10 +39,10 @@ def sequential_matching(database_path):
     max_ratio = getattr(config, 'colmap_params', {}).get('max_ratio', 0.8)
     max_distance = getattr(config, 'colmap_params', {}).get('max_distance', 0.7)
     
-    # Run GPU-accelerated sequential matching
-    print(f"[COLMAP] Running GPU-accelerated sequential matching...")
+    # Run GPU-accelerated exhaustive matching
+    print(f"[COLMAP] Running GPU-accelerated exhaustive matching...")
     run_cmd([
-        colmap_cmd, "sequential_matcher",
+        colmap_cmd, "exhaustive_matcher",
         "--database_path", database_path,
         "--SiftMatching.use_gpu", "1",  # Enable GPU acceleration
         "--SiftMatching.max_ratio", str(max_ratio),
@@ -52,22 +52,22 @@ def sequential_matching(database_path):
         "--SiftMatching.max_num_trials", "10000",   # Increase trials
         "--SiftMatching.min_inlier_ratio", "0.25"   # Lower inlier ratio
     ])
-    print(f"[COLMAP] GPU-accelerated sequential matching completed")
+    print(f"[COLMAP] GPU-accelerated exhaustive matching completed")
 
-def robust_sequential_matching(database_path):
-    """Perform sequential matching with fallback strategies"""
-    print(f"[COLMAP] Starting robust sequential matching")
+def robust_matching(database_path):
+    """Perform robust matching with fallback strategies"""
+    print(f"[COLMAP] Starting robust matching")
     
     try:
-        # Try standard sequential matching first
-        sequential_matching(database_path)
+        # Try standard exhaustive matching first
+        exhaustive_matching(database_path)
     except Exception as e:
-        print(f"[COLMAP] Standard sequential matching failed: {e}")
+        print(f"[COLMAP] Standard exhaustive matching failed: {e}")
         print(f"[COLMAP] Trying fallback matching strategy...")
         
-        # Fallback: Try exhaustive matching with GPU
+        # Fallback: Try more permissive parameters
         colmap_cmd = config.colmap_path or "colmap"
-        print(f"[COLMAP] Running GPU-accelerated exhaustive matching...")
+        print(f"[COLMAP] Running GPU-accelerated exhaustive matching with permissive parameters...")
         run_cmd([
             colmap_cmd, "exhaustive_matcher",
             "--database_path", database_path,
@@ -78,23 +78,15 @@ def robust_sequential_matching(database_path):
             "--SiftMatching.max_num_matches", "65536",  # Even more matches
             "--SiftMatching.max_num_trials", "20000"
         ])
-        print(f"[COLMAP] GPU-accelerated exhaustive matching completed")
+        print(f"[COLMAP] GPU-accelerated exhaustive matching with permissive parameters completed")
+
+# Legacy function names for backward compatibility
+def sequential_matching(database_path):
+    """Alias for exhaustive matching (sequential_matcher not available on this COLMAP version)"""
+    print(f"[COLMAP] sequential_matcher not available, using exhaustive_matcher instead")
+    exhaustive_matching(database_path)
 
 def spatial_matching(database_path):
-    """Perform spatial matching for better coverage"""
-    print(f"[COLMAP] Starting spatial matching")
-    # Use config for COLMAP path
-    colmap_cmd = config.colmap_path or "colmap"
-    
-    # Run GPU-accelerated spatial matching
-    print(f"[COLMAP] Running GPU-accelerated spatial matching...")
-    run_cmd([
-        colmap_cmd, "spatial_matcher",
-        "--database_path", database_path,
-        "--SiftMatching.use_gpu", "1",  # Enable GPU acceleration
-        "--SpatialMatching.max_num_neighbors", "50",
-        "--SiftMatching.max_num_matches", "32768",  # Increase max matches
-        "--SiftMatching.max_num_trials", "10000",   # Increase trials
-        "--SiftMatching.min_inlier_ratio", "0.25"   # Lower inlier ratio
-    ])
-    print(f"[COLMAP] GPU-accelerated spatial matching completed") 
+    """Alias for exhaustive matching (spatial_matcher not available on this COLMAP version)"""
+    print(f"[COLMAP] spatial_matcher not available, using exhaustive_matcher instead")
+    exhaustive_matching(database_path) 
