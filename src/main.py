@@ -21,38 +21,6 @@ def parse_arguments():
     parser.add_argument('--fast-mode', action='store_true',
                        help='Run in fast mode with lower resolution for faster processing')
     
-    # COLMAP parameters
-    parser.add_argument('--max-image-size', type=int, default=1600,
-                       help='Maximum image size for feature extraction (default: 1600)')
-    parser.add_argument('--max-features', type=int, default=2048,
-                       help='Maximum number of features to extract (default: 2048)')
-    parser.add_argument('--max-ratio', type=float, default=0.8,
-                       help='Maximum ratio for feature matching (default: 0.8)')
-    parser.add_argument('--max-distance', type=float, default=0.7,
-                       help='Maximum distance for feature matching (default: 0.7)')
-    parser.add_argument('--min-matches', type=int, default=15,
-                       help='Minimum number of matches for reconstruction (default: 15)')
-    parser.add_argument('--max-iterations', type=int, default=50,
-                       help='Maximum iterations for bundle adjustment (default: 50)')
-    parser.add_argument('--max-refinements', type=int, default=3,
-                       help='Maximum refinements for bundle adjustment (default: 3)')
-    
-    # Dense reconstruction parameters
-    parser.add_argument('--dense-image-size', type=int, default=2000,
-                       help='Maximum image size for dense reconstruction (default: 2000)')
-    parser.add_argument('--window-radius', type=int, default=5,
-                       help='Window radius for dense stereo (default: 5)')
-    parser.add_argument('--window-step', type=int, default=2,
-                       help='Window step for dense stereo (default: 2)')
-    
-    # Pipeline options
-    parser.add_argument('--timestamps', nargs='+', default=['timestamp1', 'timestamp2'],
-                       help='Timestamp folders to process (default: timestamp1 timestamp2)')
-    parser.add_argument('--skip-comparison', action='store_true',
-                       help='Skip 3D mesh comparison step')
-    parser.add_argument('--skip-report', action='store_true',
-                       help='Skip PDF report generation')
-    
     return parser.parse_args()
 
 # Validate setup before starting
@@ -104,22 +72,22 @@ if args.fast_mode:
 else:
     # Use command line arguments for normal mode
     config.colmap_params = {
-        'max_image_size': args.max_image_size,
-        'max_features': args.max_features,
-        'max_ratio': args.max_ratio,
-        'max_distance': args.max_distance,
-        'min_matches': args.min_matches,
-        'max_iterations': args.max_iterations,
-        'max_refinements': args.max_refinements,
-        'dense_image_size': args.dense_image_size,
-        'window_radius': args.window_radius,
-        'window_step': args.window_step,
+        'max_image_size': 1600,
+        'max_features': 2048,
+        'max_ratio': 0.8,
+        'max_distance': 0.7,
+        'min_matches': 15,
+        'max_iterations': 50,
+        'max_refinements': 3,
+        'dense_image_size': 2000,
+        'window_radius': 5,
+        'window_step': 2,
         'gpu_index': 0,  # GPU device index to use
         'use_gpu': True   # Enable GPU acceleration
     }
 
 # Update timestamps config
-config.timestamps = args.timestamps
+config.timestamps = ['timestamp1', 'timestamp2'] # Default to two timestamps
 
 # Print current configuration
 config.print_setup_info()
@@ -190,18 +158,10 @@ def main():
                 print(f"FATAL: One of the reconstructions failed: {e}")
                 return
     
-    if args.skip_comparison:
-        print("Skipping 3D mesh comparison (--skip-comparison flag)")
-        return
-    
     # Step 2: Run custom 3D mesh comparison
     print("Step 2: Running custom 3D mesh comparison...")
     base_output_dir = os.path.join(config.outputs_dir, run_id, "comparison")
     comparison_dir = run_custom_comparison(timestamp_meshes[0], timestamp_meshes[1], base_output_dir)
-    
-    if args.skip_report:
-        print("Skipping report generation (--skip-report flag)")
-        return
     
     # Step 3: Generate summary and report
     print("Step 3: Generating summary and report...")
