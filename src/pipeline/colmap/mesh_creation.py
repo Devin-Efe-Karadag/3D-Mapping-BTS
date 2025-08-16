@@ -34,11 +34,11 @@ def run_colmap_pipeline(images_folder, output_folder):
     
     # Import required functions
     from .feature_extraction import feature_extraction
-    from .matching import sequential_matching, spatial_matching
+    from .matching import exhaustive_matching, spatial_matching
     from .reconstruction import mapping, model_conversion, image_undistortion
     
     feature_extraction(database_path, images_folder)
-    sequential_matching(database_path)  # Much faster than exhaustive
+    exhaustive_matching(database_path)  # More accurate than sequential
     spatial_matching(database_path)     # Additional matching for coverage
     mapping(database_path, images_folder, sparse_folder)
     model_conversion(sparse_folder)
