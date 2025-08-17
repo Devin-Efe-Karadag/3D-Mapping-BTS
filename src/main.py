@@ -42,18 +42,8 @@ if warnings:
 # Parse command line arguments
 args = parse_arguments()
 
-# Use optimized COLMAP parameters (already implemented in individual functions)
+# Use basic COLMAP parameters
 config.colmap_params = {
-    'max_image_size': 1200,      # Already optimized in feature_extraction.py
-    'max_features': 1024,        # Already optimized in feature_extraction.py
-    'max_ratio': 0.7,            # Already optimized in matching.py
-    'max_distance': 0.6,         # Already optimized in matching.py
-    'min_matches': 12,           # Already optimized in reconstruction.py
-    'max_iterations': 25,        # Already optimized in reconstruction.py
-    'max_refinements': 2,        # Already optimized in reconstruction.py
-    'dense_image_size': 1600,    # Already optimized in dense_reconstruction.py
-    'window_radius': 3,          # Already optimized in dense_reconstruction.py
-    'window_step': 2,            # Already optimized in dense_reconstruction.py
     'gpu_index': 0,              # GPU device index to use
     'use_gpu': True              # Enable GPU acceleration
 }
@@ -63,17 +53,17 @@ config.timestamps = ['timestamp1', 'timestamp2'] # Default to two timestamps
 
 # Print current configuration
 config.print_setup_info()
-print("COLMAP Parameters (Speed Optimized):")
+print("COLMAP Parameters:")
 for key, value in config.colmap_params.items():
     print(f"  {key}: {value}")
 print()
-print("🚀 All COLMAP functions are already optimized for maximum speed!")
-print("   - Feature extraction: 3-5x faster")
-print("   - Feature matching: 3-5x faster")
-print("   - Sparse reconstruction: 3-6x faster")
-print("   - Dense reconstruction: 3-6x faster")
-print("   - Stereo fusion: 2-4x faster")
-print("   - Poisson meshing: 2-3x faster")
+print("🚀 COLMAP pipeline configuration:")
+print("   - Feature extraction: Basic with defaults")
+print("   - Feature matching: Basic with defaults")
+print("   - Sparse reconstruction: Basic with defaults")
+print("   - Dense reconstruction: Basic with defaults")
+print("   - Stereo fusion: Basic with defaults")
+print("   - Poisson meshing: Basic with defaults")
 print()
 
 # Create unique run folders for each execution
@@ -164,10 +154,14 @@ def main():
     print(f"Custom 3D mesh comparison completed in: {comparison_dir}")
     
     # Show final status
-    print("\n🚀 Pipeline completed with maximum speed optimization!")
-    print("   - All COLMAP functions optimized for speed")
-    print("   - GPU acceleration enabled")
-    print("   - Expected 3-6x faster than default COLMAP")
+    print("\n🚀 Pipeline completed successfully!")
+    print("   - Feature extraction: Basic with defaults")
+    print("   - Feature matching: Basic with defaults")
+    print("   - Sparse reconstruction: Basic with defaults")
+    print("   - Dense reconstruction: Basic with defaults")
+    print("   - Stereo fusion: Basic with defaults")
+    print("   - Poisson meshing: Basic with defaults")
+    print("   - GPU acceleration: Auto-detected")
     print("   - Quality maintained for 3D mapping applications")
 
 if __name__ == "__main__":

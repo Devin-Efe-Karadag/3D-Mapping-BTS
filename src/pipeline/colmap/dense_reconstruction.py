@@ -160,141 +160,74 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
     # Use config for COLMAP path
     colmap_cmd = config.colmap_path or "colmap"
     
-    # Get configurable parameters
-    dense_image_size = getattr(config, 'colmap_params', {}).get('dense_image_size', 1800)  # Increased from 1600 for better quality
-    window_radius = getattr(config, 'colmap_params', {}).get('window_radius', 4)  # Increased from 3 for better quality
-    window_step = getattr(config, 'colmap_params', {}).get('window_step', 2)  # Keep at 2
+    print(f"[COLMAP] 🚀 Using basic settings for dense stereo:")
+    print(f"[COLMAP]   - Using all COLMAP defaults")
+    print(f"[COLMAP]   - GPU acceleration: Auto-detected")
     
-    print(f"[COLMAP] 🚀 Using BALANCED speed optimization for dense stereo:")
-    print(f"[COLMAP]   - dense_image_size: {dense_image_size} (balanced for quality)")
-    print(f"[COLMAP]   - window_radius: {window_radius} (balanced for quality)")
-    print(f"[COLMAP]   - window_step: {window_step} (balanced for speed)")
-    print(f"[COLMAP]   - GPU acceleration: ENABLED")
-    
-    # Build command with BALANCED speed optimization options
+    # Build command with basic options
     cmd = [
         colmap_cmd, "patch_match_stereo",
         "--workspace_path", dense_folder,
-        "--workspace_format", "COLMAP",
-        # BALANCED PATCH MATCH STEREO OPTIMIZATIONS FOR SPEED + QUALITY
-        "--PatchMatchStereo.max_image_size", str(dense_image_size),  # Balanced for quality
-        "--PatchMatchStereo.gpu_index", "0",  # Use first CUDA GPU device
-        "--PatchMatchStereo.depth_min", "-1",  # Auto-detect
-        "--PatchMatchStereo.depth_max", "-1",  # Auto-detect
-        "--PatchMatchStereo.window_radius", str(window_radius),  # Balanced for quality
-        "--PatchMatchStereo.window_step", str(window_step),  # Balanced for speed
-        "--PatchMatchStereo.sigma_spatial", "-1",  # Auto-detect
-        "--PatchMatchStereo.sigma_color", "0.25",  # Balanced threshold
-        "--PatchMatchStereo.num_samples", "12",  # Balanced for quality
-        "--PatchMatchStereo.ncc_sigma", "0.7",  # Balanced threshold
-        "--PatchMatchStereo.min_triangulation_angle", "0.9",  # Balanced threshold
-        "--PatchMatchStereo.incident_angle_sigma", "1.0",  # Balanced threshold
-        "--PatchMatchStereo.num_iterations", "4",  # Balanced for quality
-        "--PatchMatchStereo.geom_consistency", "0",  # Disabled for speed
-        "--PatchMatchStereo.geom_consistency_regularizer", "0.4",  # Balanced threshold
-        "--PatchMatchStereo.geom_consistency_max_cost", "4",  # Balanced threshold
-        "--PatchMatchStereo.filter", "1",  # Keep filtering
-        "--PatchMatchStereo.filter_min_ncc", "0.09",  # Balanced threshold
-        "--PatchMatchStereo.filter_min_triangulation_angle", "2.5",  # Balanced threshold
-        "--PatchMatchStereo.filter_min_num_consistent", "1",  # Keep minimal
-        "--PatchMatchStereo.filter_geom_consistency_max_cost", "1.5",  # Balanced threshold
-        "--PatchMatchStereo.cache_size", "20",  # Balanced memory usage
-        "--PatchMatchStereo.allow_missing_files", "0",  # Keep default
-        "--PatchMatchStereo.write_consistency_graph", "0"  # Already disabled
+        "--workspace_format", "COLMAP"
     ]
     
-    print(f"[COLMAP] Speed optimization summary:")
-    print(f"[COLMAP]   • Max image size: {dense_image_size}px (vs default unlimited)")
-    print(f"[COLMAP]   • Window radius: {window_radius} (vs default 5)")
-    print(f"[COLMAP]   • Window step: {window_step} (vs default 1)")
-    print(f"[COLMAP]   • Num samples: 12 (vs default 15)")
-    print(f"[COLMAP]   • Num iterations: 4 (vs default 5)")
-    print(f"[COLMAP]   • Geom consistency: DISABLED for speed")
-    print(f"[COLMAP]   • Cache size: 20GB (vs default 32GB)")
-    print(f"[COLMAP]   • GPU acceleration: ENABLED")
+    print(f"[COLMAP] Dense stereo summary:")
+    print(f"[COLMAP]   • Using all COLMAP defaults")
+    print(f"[COLMAP]   • GPU acceleration: Auto-detected")
     
     run_cmd(cmd)
-    print(f"[COLMAP] 🎉 BALANCED CUDA GPU-accelerated dense stereo reconstruction completed!")
-    print(f"[COLMAP] Expected speed improvement: 2-4x faster than default settings")
-    print(f"[COLMAP] Note: Balanced for quality to prevent downstream crashes")
+    print(f"[COLMAP] 🎉 Dense stereo reconstruction completed!")
+    print(f"[COLMAP] Using all default COLMAP settings")
     
     # Dense fusion
     print(f"[COLMAP] Starting ULTRA-FAST dense fusion")
     fused_folder = os.path.join(dense_folder, "fused")
     os.makedirs(fused_folder, exist_ok=True)
     
-    # AGGRESSIVE SPEED OPTIMIZATION PARAMETERS FOR STEREO FUSION
-    print(f"[COLMAP] 🚀 Using AGGRESSIVE speed optimization for stereo fusion:")
-    print(f"[COLMAP]   - GPU acceleration: AUTOMATIC when CUDA available")
-    print(f"[COLMAP]   - Cache optimization: ENABLED for speed")
-    print(f"[COLMAP]   - Thread optimization: ALL CPU cores")
+    # Run stereo fusion with basic settings
+    print(f"[COLMAP] 🚀 Using basic settings for stereo fusion:")
+    print(f"[COLMAP]   - Using all COLMAP defaults")
+    print(f"[COLMAP]   - GPU acceleration: Auto-detected")
     
-    # Build command with AGGRESSIVE speed optimization options
+    # Build command with basic options
     run_cmd([
         colmap_cmd, "stereo_fusion",
         "--workspace_path", dense_folder,
         "--workspace_format", "COLMAP",
         "--input_type", "geometric",
-        "--output_path", os.path.join(fused_folder, "fused.ply"),
-        # AGGRESSIVE STEREO FUSION OPTIMIZATIONS FOR MAXIMUM SPEED
-        "--StereoFusion.num_threads", str(multiprocessing.cpu_count()),  # Use all CPU cores
-        "--StereoFusion.max_image_size", "1600",  # Limited for speed (vs unlimited -1)
-        "--StereoFusion.min_num_pixels", "3",  # Reduced from 5 = faster processing
-        "--StereoFusion.max_num_pixels", "5000",  # Reduced from 10000 = faster processing
-        "--StereoFusion.max_traversal_depth", "50",  # Reduced from 100 = faster
-        "--StereoFusion.max_reproj_error", "3",  # Increased from 2 = faster filtering
-        "--StereoFusion.max_depth_error", "0.02",  # Increased from 0.01 = faster
-        "--StereoFusion.max_normal_error", "15",  # Increased from 10 = faster
-        "--StereoFusion.check_num_images", "25",  # Reduced from 50 = faster
-        "--StereoFusion.cache_size", "16",  # Reduced from 32 = less memory usage
-        "--StereoFusion.use_cache", "1"  # Enable cache for speed
+        "--output_path", os.path.join(fused_folder, "fused.ply")
     ])
     
-    print(f"[COLMAP] Speed optimization summary:")
-    print(f"[COLMAP]   • Max image size: 1600px (vs unlimited)")
-    print(f"[COLMAP]   • Min pixels: 3 (vs default 5)")
-    print(f"[COLMAP]   • Max pixels: 5000 (vs default 10000)")
-    print(f"[COLMAP]   • Traversal depth: 50 (vs default 100)")
-    print(f"[COLMAP]   • Max reproj error: 3 (vs default 2)")
-    print(f"[COLMAP]   • Check images: 25 (vs default 50)")
-    print(f"[COLMAP]   • Cache size: 16GB (vs default 32GB)")
-    print(f"[COLMAP]   • Cache enabled: YES")
-    print(f"[COLMAP]   • CPU threads: {multiprocessing.cpu_count()}")
+    print(f"[COLMAP] Stereo fusion summary:")
+    print(f"[COLMAP]   • Using all COLMAP defaults")
+    print(f"[COLMAP]   • GPU acceleration: Auto-detected")
     
-    print(f"[COLMAP] 🎉 ULTRA-FAST dense fusion completed!")
-    print(f"[COLMAP] Expected speed improvement: 2-4x faster than default settings")
+    print(f"[COLMAP] 🎉 Stereo fusion completed!")
+    print(f"[COLMAP] Using all default COLMAP settings")
     
     # Mesh creation
     print(f"[COLMAP] Creating mesh from point cloud")
     mesh_folder = os.path.join(output_folder, "mesh")
     os.makedirs(mesh_folder, exist_ok=True)
     
-    # Use DEFAULT values for maximum stability
-    print(f"[COLMAP] Using DEFAULT Poisson meshing parameters for maximum stability:")
-    print(f"[COLMAP]   - CPU optimization: ALL CPU cores")
-    print(f"[COLMAP]   - All other parameters: DEFAULT values (stable)")
+    # Use basic settings for maximum stability
+    print(f"[COLMAP] Using basic Poisson meshing settings:")
+    print(f"[COLMAP]   - Using all COLMAP defaults")
+    print(f"[COLMAP]   - GPU acceleration: Auto-detected")
     
-    # Build command with DEFAULT values for stability
+    # Build command with basic options
     run_cmd([
         colmap_cmd, "poisson_mesher",
         "--input_path", os.path.join(fused_folder, "fused.ply"),
-        "--output_path", os.path.join(mesh_folder, "mesh.ply"),
-        # Use DEFAULT values for maximum stability
-        "--PoissonMeshing.point_weight", "1",  # Default
-        "--PoissonMeshing.depth", "13",  # Default = 13
-        "--PoissonMeshing.color", "32",  # Default = 32
-        "--PoissonMeshing.trim", "10",  # Default = 10
-        "--PoissonMeshing.num_threads", str(multiprocessing.cpu_count())  # Use all CPU cores
+        "--output_path", os.path.join(mesh_folder, "mesh.ply")
     ])
     
-    print(f"[COLMAP] Parameter summary:")
-    print(f"[COLMAP]   • Depth: 13 (default)")
-    print(f"[COLMAP]   • Color: 32 (default)")
-    print(f"[COLMAP]   • Trim: 10 (default)")
-    print(f"[COLMAP]   • CPU threads: {multiprocessing.cpu_count()}")
+    print(f"[COLMAP] Poisson meshing summary:")
+    print(f"[COLMAP]   • Using all COLMAP defaults")
+    print(f"[COLMAP]   • GPU acceleration: Auto-detected")
     
     print(f"[COLMAP] Mesh creation completed!")
-    print(f"[COLMAP] Note: Using default parameters for maximum stability")
+    print(f"[COLMAP] Using all default COLMAP settings")
     
             # Convert to OBJ format for 3D mesh analysis
     obj_file = os.path.join(mesh_folder, "model.obj")
