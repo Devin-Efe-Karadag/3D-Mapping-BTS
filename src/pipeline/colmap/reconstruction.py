@@ -19,29 +19,31 @@ def run_cmd(cmd, cwd=None):
 
 def mapping(database_path, images_folder, sparse_folder):
     """Perform sparse reconstruction mapping using hierarchical mapper with basic settings"""
-    print(f"[COLMAP] Starting hierarchical sparse reconstruction with default settings")
+    print(f"[COLMAP] Starting hierarchical sparse reconstruction with GPU acceleration")
     os.makedirs(sparse_folder, exist_ok=True)
     # Use config for COLMAP path
     colmap_cmd = config.colmap_path or "colmap"
     
-    # Run hierarchical mapping with basic settings
-    print(f"[COLMAP] 🚀 Running hierarchical mapping with default settings...")
+    # Run hierarchical mapping with GPU acceleration
+    print(f"[COLMAP] 🚀 Running hierarchical mapping with GPU acceleration...")
     
     # Build command with basic options
     cmd = [
         colmap_cmd, "hierarchical_mapper",
         "--database_path", database_path,
         "--image_path", images_folder,
-        "--output_path", sparse_folder
+        "--output_path", sparse_folder,
+        "--Mapper.ba_use_gpu", "1",
+        "--Mapper.ba_gpu_index", "0"
     ]
     
     print(f"[COLMAP] Hierarchical mapping summary:")
-    print(f"[COLMAP]   • Using all COLMAP defaults")
-    print(f"[COLMAP]   • GPU acceleration: Auto-detected")
+    print(f"[COLMAP]   • GPU acceleration: ENABLED")
+    print(f"[COLMAP]   • Using GPU device: 0")
     
     run_cmd(cmd)
-    print(f"[COLMAP] 🎉 Hierarchical sparse reconstruction completed!")
-    print(f"[COLMAP] Using all default COLMAP settings")
+    print(f"[COLMAP] 🎉 Hierarchical sparse reconstruction with GPU acceleration completed!")
+    print(f"[COLMAP] Using GPU acceleration with default COLMAP settings")
 
 def model_conversion(sparse_folder):
     """Convert model to TXT format"""

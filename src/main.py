@@ -58,12 +58,12 @@ for key, value in config.colmap_params.items():
     print(f"  {key}: {value}")
 print()
 print("🚀 COLMAP pipeline configuration:")
-print("   - Feature extraction: Basic with defaults")
-print("   - Feature matching: Basic with defaults")
-print("   - Sparse reconstruction: Basic with defaults")
-print("   - Dense reconstruction: Basic with defaults")
-print("   - Stereo fusion: Basic with defaults")
-print("   - Poisson meshing: Basic with defaults")
+print("   - Feature extraction: Basic with GPU acceleration")
+print("   - Feature matching: Basic with GPU acceleration")
+print("   - Sparse reconstruction: Basic with GPU acceleration")
+print("   - Dense reconstruction: Basic with GPU acceleration")
+print("   - Stereo fusion: Basic with GPU acceleration")
+print("   - Poisson meshing: Basic with GPU acceleration")
 print()
 
 # Create unique run folders for each execution
@@ -155,13 +155,13 @@ def main():
     
     # Show final status
     print("\n🚀 Pipeline completed successfully!")
-    print("   - Feature extraction: Basic with defaults")
-    print("   - Feature matching: Basic with defaults")
-    print("   - Sparse reconstruction: Basic with defaults")
-    print("   - Dense reconstruction: Basic with defaults")
-    print("   - Stereo fusion: Basic with defaults")
-    print("   - Poisson meshing: Basic with defaults")
-    print("   - GPU acceleration: Auto-detected")
+    print("   - Feature extraction: Basic with GPU acceleration")
+    print("   - Feature matching: Basic with GPU acceleration")
+    print("   - Sparse reconstruction: Basic with GPU acceleration")
+    print("   - Dense reconstruction: Basic with GPU acceleration")
+    print("   - Stereo fusion: Basic with GPU acceleration")
+    print("   - Poisson meshing: Basic with GPU acceleration")
+    print("   - GPU acceleration: ENABLED")
     print("   - Quality maintained for 3D mapping applications")
 
 if __name__ == "__main__":

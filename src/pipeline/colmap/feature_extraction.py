@@ -66,26 +66,28 @@ def feature_extraction(database_path, images_folder):
     # Use config for COLMAP path
     colmap_cmd = config.colmap_path or "colmap"
     
-    print(f"[COLMAP] 🚀 Using basic feature extraction with default settings:")
-    print(f"[COLMAP]   - Using all COLMAP defaults")
+    print(f"[COLMAP] 🚀 Using basic feature extraction with GPU acceleration:")
+    print(f"[COLMAP]   - GPU acceleration: ENABLED")
     
     # Run feature extraction with basic options
-    print(f"[COLMAP] Running basic feature extraction with default settings...")
+    print(f"[COLMAP] Running basic feature extraction with GPU acceleration...")
     
     # Build command with basic options
     cmd = [
         colmap_cmd, "feature_extractor",
         "--database_path", database_path,
-        "--image_path", images_folder
+        "--image_path", images_folder,
+        "--FeatureExtraction.use_gpu", "1",
+        "--FeatureExtraction.gpu_index", "0"
     ]
     
     print(f"[COLMAP] Feature extraction summary:")
-    print(f"[COLMAP]   • Using all COLMAP defaults")
-    print(f"[COLMAP]   • GPU acceleration: Auto-detected")
+    print(f"[COLMAP]   • GPU acceleration: ENABLED")
+    print(f"[COLMAP]   • Using GPU device: 0")
     
     run_cmd(cmd)
-    print(f"[COLMAP] 🎉 Basic feature extraction completed!")
-    print(f"[COLMAP] Using all default COLMAP settings")
+    print(f"[COLMAP] 🎉 Basic feature extraction with GPU acceleration completed!")
+    print(f"[COLMAP] Using GPU acceleration with default COLMAP settings")
     
     # Validate that features were actually extracted
     if not os.path.exists(database_path):

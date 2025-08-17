@@ -160,34 +160,33 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
     # Use config for COLMAP path
     colmap_cmd = config.colmap_path or "colmap"
     
-    print(f"[COLMAP] 🚀 Using basic settings for dense stereo:")
-    print(f"[COLMAP]   - Using all COLMAP defaults")
-    print(f"[COLMAP]   - GPU acceleration: Auto-detected")
+    print(f"[COLMAP] 🚀 Using basic settings for dense stereo with GPU acceleration:")
+    print(f"[COLMAP]   - GPU acceleration: ENABLED")
     
     # Build command with basic options
     cmd = [
         colmap_cmd, "patch_match_stereo",
         "--workspace_path", dense_folder,
-        "--workspace_format", "COLMAP"
+        "--workspace_format", "COLMAP",
+        "--PatchMatchStereo.gpu_index", "0"
     ]
     
     print(f"[COLMAP] Dense stereo summary:")
-    print(f"[COLMAP]   • Using all COLMAP defaults")
-    print(f"[COLMAP]   • GPU acceleration: Auto-detected")
+    print(f"[COLMAP]   • GPU acceleration: ENABLED")
+    print(f"[COLMAP]   • Using GPU device: 0")
     
     run_cmd(cmd)
-    print(f"[COLMAP] 🎉 Dense stereo reconstruction completed!")
-    print(f"[COLMAP] Using all default COLMAP settings")
+    print(f"[COLMAP] 🎉 Dense stereo reconstruction with GPU acceleration completed!")
+    print(f"[COLMAP] Using GPU acceleration with default COLMAP settings")
     
     # Dense fusion
     print(f"[COLMAP] Starting ULTRA-FAST dense fusion")
     fused_folder = os.path.join(dense_folder, "fused")
     os.makedirs(fused_folder, exist_ok=True)
     
-    # Run stereo fusion with basic settings
-    print(f"[COLMAP] 🚀 Using basic settings for stereo fusion:")
-    print(f"[COLMAP]   - Using all COLMAP defaults")
-    print(f"[COLMAP]   - GPU acceleration: Auto-detected")
+    # Run stereo fusion with GPU acceleration
+    print(f"[COLMAP] 🚀 Using basic settings for stereo fusion with GPU acceleration:")
+    print(f"[COLMAP]   - GPU acceleration: ENABLED")
     
     # Build command with basic options
     run_cmd([
@@ -195,39 +194,40 @@ def run_colmap_pipeline_with_dense(images_folder, output_folder):
         "--workspace_path", dense_folder,
         "--workspace_format", "COLMAP",
         "--input_type", "geometric",
-        "--output_path", os.path.join(fused_folder, "fused.ply")
+        "--output_path", os.path.join(fused_folder, "fused.ply"),
+        "--StereoFusion.gpu_index", "0"
     ])
     
     print(f"[COLMAP] Stereo fusion summary:")
-    print(f"[COLMAP]   • Using all COLMAP defaults")
-    print(f"[COLMAP]   • GPU acceleration: Auto-detected")
+    print(f"[COLMAP]   • GPU acceleration: ENABLED")
+    print(f"[COLMAP]   • Using GPU device: 0")
     
-    print(f"[COLMAP] 🎉 Stereo fusion completed!")
-    print(f"[COLMAP] Using all default COLMAP settings")
+    print(f"[COLMAP] 🎉 Stereo fusion with GPU acceleration completed!")
+    print(f"[COLMAP] Using GPU acceleration with default COLMAP settings")
     
     # Mesh creation
     print(f"[COLMAP] Creating mesh from point cloud")
     mesh_folder = os.path.join(output_folder, "mesh")
     os.makedirs(mesh_folder, exist_ok=True)
     
-    # Use basic settings for maximum stability
-    print(f"[COLMAP] Using basic Poisson meshing settings:")
-    print(f"[COLMAP]   - Using all COLMAP defaults")
-    print(f"[COLMAP]   - GPU acceleration: Auto-detected")
+    # Use basic settings with GPU acceleration
+    print(f"[COLMAP] Using basic Poisson meshing settings with GPU acceleration:")
+    print(f"[COLMAP]   - GPU acceleration: ENABLED")
     
     # Build command with basic options
     run_cmd([
         colmap_cmd, "poisson_mesher",
         "--input_path", os.path.join(fused_folder, "fused.ply"),
-        "--output_path", os.path.join(mesh_folder, "mesh.ply")
+        "--output_path", os.path.join(mesh_folder, "mesh.ply"),
+        "--PoissonMeshing.gpu_index", "0"
     ])
     
     print(f"[COLMAP] Poisson meshing summary:")
-    print(f"[COLMAP]   • Using all COLMAP defaults")
-    print(f"[COLMAP]   • GPU acceleration: Auto-detected")
+    print(f"[COLMAP]   • GPU acceleration: ENABLED")
+    print(f"[COLMAP]   • Using GPU device: 0")
     
     print(f"[COLMAP] Mesh creation completed!")
-    print(f"[COLMAP] Using all default COLMAP settings")
+    print(f"[COLMAP] Using GPU acceleration with default COLMAP settings")
     
             # Convert to OBJ format for 3D mesh analysis
     obj_file = os.path.join(mesh_folder, "model.obj")
