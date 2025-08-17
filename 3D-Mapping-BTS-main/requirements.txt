@@ -1,0 +1,23 @@
+# Core 3D processing libraries
+open3d>=0.17.0
+numpy>=1.21.0
+pandas>=1.3.0
+
+# Visualization (optional but recommended)
+matplotlib>=3.5.0
+
+# Image processing
+Pillow>=8.0.0
+
+# PDF generation
+fpdf>=1.7.2
+
+# Deep learning framework (for CUDA detection)
+torch>=1.9.0
+
+# COLMAP Python bindings (if needed)
+# colmap>=0.1.0
+
+# Additional utilities
+scipy>=1.7.0
+scikit-learn>=1.0.0 
