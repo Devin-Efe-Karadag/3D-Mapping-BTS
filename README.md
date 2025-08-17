@@ -157,13 +157,7 @@ The pipeline includes custom Python implementations for 3D mesh analysis:
 
 
 
-## Troubleshooting
 
-### CUDA Issues
-
-- **CUDA not available**: Use a system with NVIDIA GPU
-- **CUDA version mismatch**: Update CUDA drivers and PyTorch
-- **Memory errors**: The pipeline automatically uses optimized settings
 
 ## Understanding the Results
 
