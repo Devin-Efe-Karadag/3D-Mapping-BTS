@@ -32,12 +32,8 @@ def run_cmd(cmd, cwd=None):
 
 def sequential_matching(database_path):
     """Perform sequential matching with basic settings"""
-    print(f"[COLMAP] Starting sequential matching with GPU acceleration")
     # Use config for COLMAP path
     colmap_cmd = config.colmap_path or "colmap"
-    
-    # Run sequential matching with GPU acceleration
-    print(f"[COLMAP] 🚀 Running sequential matching with GPU acceleration...")
     
     # Build command with basic options
     cmd = [
@@ -47,22 +43,13 @@ def sequential_matching(database_path):
         "--FeatureMatching.gpu_index", "0"
     ]
     
-    print(f"[COLMAP] Sequential matching summary:")
-    print(f"[COLMAP]   • GPU acceleration: ENABLED")
-    print(f"[COLMAP]   • Using GPU device: 0")
-    
     run_cmd(cmd)
-    print(f"[COLMAP] 🎉 Sequential matching with GPU acceleration completed!")
-    print(f"[COLMAP] Using GPU acceleration with default COLMAP settings")
+    print(f"[COLMAP] Sequential matching completed")
 
 def transitive_matching(database_path):
     """Perform transitive matching with basic settings"""
-    print(f"[COLMAP] Starting transitive matching with GPU acceleration")
     # Use config for COLMAP path
     colmap_cmd = config.colmap_path or "colmap"
-    
-    # Run transitive matching with GPU acceleration
-    print(f"[COLMAP] 🚀 Running transitive matching with GPU acceleration...")
     
     # Build command with basic options
     cmd = [
@@ -72,16 +59,10 @@ def transitive_matching(database_path):
         "--FeatureMatching.gpu_index", "0"
     ]
     
-    print(f"[COLMAP] Transitive matching summary:")
-    print(f"[COLMAP]   • GPU acceleration: ENABLED")
-    print(f"[COLMAP]   • Using GPU device: 0")
-    
     run_cmd(cmd)
-    print(f"[COLMAP] 🎉 Transitive matching with GPU acceleration completed!")
-    print(f"[COLMAP] Using GPU acceleration with default COLMAP settings")
+    print(f"[COLMAP] Transitive matching completed")
 
 # Legacy function names for backward compatibility
 def robust_sequential_matching(database_path):
     """Alias for sequential matching (using defaults)"""
-    print(f"[COLMAP] Using sequential matching with default settings")
     sequential_matching(database_path) 

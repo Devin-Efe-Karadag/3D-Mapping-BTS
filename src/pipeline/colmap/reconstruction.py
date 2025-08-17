@@ -19,13 +19,9 @@ def run_cmd(cmd, cwd=None):
 
 def mapping(database_path, images_folder, sparse_folder):
     """Perform sparse reconstruction mapping using hierarchical mapper with basic settings"""
-    print(f"[COLMAP] Starting hierarchical sparse reconstruction with GPU acceleration")
     os.makedirs(sparse_folder, exist_ok=True)
     # Use config for COLMAP path
     colmap_cmd = config.colmap_path or "colmap"
-    
-    # Run hierarchical mapping with GPU acceleration
-    print(f"[COLMAP] 🚀 Running hierarchical mapping with GPU acceleration...")
     
     # Build command with basic options
     cmd = [
@@ -37,17 +33,11 @@ def mapping(database_path, images_folder, sparse_folder):
         "--Mapper.ba_gpu_index", "0"
     ]
     
-    print(f"[COLMAP] Hierarchical mapping summary:")
-    print(f"[COLMAP]   • GPU acceleration: ENABLED")
-    print(f"[COLMAP]   • Using GPU device: 0")
-    
     run_cmd(cmd)
-    print(f"[COLMAP] 🎉 Hierarchical sparse reconstruction with GPU acceleration completed!")
-    print(f"[COLMAP] Using GPU acceleration with default COLMAP settings")
+    print(f"[COLMAP] Hierarchical mapping completed")
 
 def model_conversion(sparse_folder):
     """Convert model to TXT format"""
-    print(f"[COLMAP] Converting model to TXT format")
     # Use config for COLMAP path
     colmap_cmd = config.colmap_path or "colmap"
     run_cmd([
@@ -55,19 +45,14 @@ def model_conversion(sparse_folder):
         "--input_path", os.path.join(sparse_folder, "0"),
         "--output_path", sparse_folder,
         "--output_type", "TXT"
-        # Note: model_converter doesn't support GPU acceleration
     ])
     print(f"[COLMAP] Model conversion completed")
 
 def image_undistortion(images_folder, sparse_folder, dense_folder):
     """Undistort images for dense reconstruction with basic settings"""
-    print(f"[COLMAP] Starting image undistortion with default settings")
     os.makedirs(dense_folder, exist_ok=True)
     # Use config for COLMAP path
     colmap_cmd = config.colmap_path or "colmap"
-    
-    # Run image undistortion with basic settings
-    print(f"[COLMAP] 🚀 Running image undistortion with default settings...")
     
     # Build command with basic options
     cmd = [
@@ -78,10 +63,5 @@ def image_undistortion(images_folder, sparse_folder, dense_folder):
         "--output_type", "COLMAP"
     ]
     
-    print(f"[COLMAP] Image undistortion summary:")
-    print(f"[COLMAP]   • Using all COLMAP defaults")
-    print(f"[COLMAP]   • GPU acceleration: Auto-detected")
-    
     run_cmd(cmd)
-    print(f"[COLMAP] 🎉 Image undistortion completed!")
-    print(f"[COLMAP] Using all default COLMAP settings") 
+    print(f"[COLMAP] Image undistortion completed") 

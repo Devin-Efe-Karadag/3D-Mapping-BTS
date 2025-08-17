@@ -10,24 +10,6 @@ A Python-based pipeline for 3D reconstruction using COLMAP and custom 3D mesh an
 - Use a system with NVIDIA GPU and CUDA for full functionality
 - The pipeline automatically detects CUDA availability
 
-## 🖥️ Display Environment (Linux)
-
-**On Linux systems, the pipeline automatically handles headless environments:**
-
-- Automatically sets `QT_QPA_PLATFORM=offscreen` for Qt applications
-- Attempts to start virtual display (`Xvfb`) if available
-- Falls back to offscreen mode if virtual display fails
-- No manual display configuration needed
-
-## ☁️ Cloud Environment Support
-
-**The pipeline automatically detects and adapts to cloud environments (Google Colab, etc.):**
-
-- **Automatic detection**: Recognizes `/content/`, `/tmp/`, `/workspace/` paths
-- **Path adaptation**: Uses current working directory instead of src directory
-- **Directory creation**: Automatically creates required data structure
-- **Cross-platform**: Works on both local and cloud systems
-
 ## Dependencies
 
 ### Python Dependencies
@@ -39,18 +21,7 @@ pip install -r requirements.txt
 ### System Dependencies
 
 #### COLMAP
-COLMAP is required for 3D reconstruction. Install it based on your system:
-
-**macOS:**
-```bash
-brew install colmap
-```
-
-**Windows:**
-Download from [COLMAP releases](https://github.com/colmap/colmap/releases)
-
-**From Source:**
-See [COLMAP installation guide](https://colmap.github.io/install.html#build-from-source)
+COLMAP is required for 3D reconstruction. Build it from source following the [official installation guide](https://colmap.github.io/install.html).
 
 #### Custom 3D Mesh Analysis
 The pipeline includes custom Python implementations for 3D mesh analysis. All functionality is provided through Python libraries:
@@ -72,7 +43,7 @@ pip install open3d numpy pandas matplotlib scipy scikit-learn
 1. **Clone the repository:**
 ```bash
 git clone <repository-url>
-cd OdineProj
+cd 3D-Mapping-BTS
 ```
 
 2. **Create and activate virtual environment:**
@@ -86,22 +57,11 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. **Install system dependencies:**
-   - **COLMAP**: See installation instructions above
-   - **Python packages**: `pip install -r requirements.txt`
+4. **Build COLMAP from source:**
+   - Follow the [official COLMAP installation guide](https://colmap.github.io/install.html)
+   - Ensure CUDA support is enabled during compilation
 
-5. **Run setup validation:**
-```bash
-cd src
-python setup.py
-```
-
-6. **Test the custom implementations (optional but recommended):**
-```bash
-python test_custom_implementations.py
-```
-
-7. **Run the pipeline:**
+5. **Run the pipeline:**
 ```bash
 python main.py
 ```
@@ -112,48 +72,24 @@ python main.py
 ```bash
 # Run with default settings
 python main.py
-
-# Run with custom timestamps
-python main.py --timestamps timestamp1 timestamp3
-
-# Skip comparison step (only reconstruction)
-python main.py --skip-comparison
-
-# Skip report generation
-python main.py --skip-report
 ```
 
-### COLMAP Parameters
-You can customize COLMAP reconstruction parameters:
+The pipeline automatically:
+1. **Extracts features** from images using COLMAP with GPU acceleration
+2. **Matches features** between images using sequential and transitive matching
+3. **Creates sparse reconstruction** using hierarchical mapping
+4. **Performs dense reconstruction** using patch match stereo
+5. **Generates 3D meshes** using Poisson meshing
+6. **Runs custom 3D analysis** including ICP alignment and distance measurements
 
-```bash
-# High quality reconstruction (slower)
-python main.py --max-image-size 3200 --max-features 4096 --min-matches 20
+### Understanding the Pipeline
 
-# Fast reconstruction (lower quality)
-python main.py --max-image-size 800 --max-features 1024 --min-matches 10
+Our pipeline adapts the standard COLMAP workflow described in the [COLMAP CLI documentation](https://colmap.github.io/cli.html) with the following modifications:
 
-# Custom dense reconstruction
-python main.py --dense-image-size 3000 --window-radius 7 --window-step 3
-```
-
-### Available Parameters
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `--max-image-size` | 1600 | Maximum image size for feature extraction |
-| `--max-features` | 2048 | Maximum number of features to extract |
-| `--max-ratio` | 0.8 | Maximum ratio for feature matching |
-| `--max-distance` | 0.7 | Maximum distance for feature matching |
-| `--min-matches` | 15 | Minimum matches for reconstruction |
-| `--max-iterations` | 50 | Bundle adjustment iterations |
-| `--max-refinements` | 3 | Bundle adjustment refinements |
-| `--dense-image-size` | 2000 | Image size for dense reconstruction |
-| `--window-radius` | 5 | Window radius for dense stereo |
-| `--window-step` | 2 | Window step for dense stereo |
-| `--timestamps` | timestamp1 timestamp2 | Folders to process |
-| `--skip-comparison` | False | Skip custom 3D mesh comparison |
-| `--skip-report` | False | Skip PDF report generation |
+- **GPU acceleration** enabled for all supported operations
+- **Minimal parameter tuning** - uses COLMAP's intelligent defaults
+- **Custom 3D mesh analysis** after reconstruction
+- **Automated pipeline execution** - no manual step-by-step commands needed
 
 ## Expected Outputs
 
@@ -219,40 +155,15 @@ The pipeline includes custom Python implementations for 3D mesh analysis:
 - **Pandas**: Data export to CSV format
 - **Matplotlib**: Visualization generation (optional dependency)
 
-### Testing
 
-Run the test script to verify all custom implementations work correctly:
-```bash
-cd src
-python test_custom_implementations.py
-```
 
 ## Troubleshooting
-
-### Qt Display Errors on Linux
-
-If you encounter errors like:
-```
-qt.qpa.xcb: could not connect to display
-qt.qpa.plugin: Could not load the Qt platform plugin "xcb"
-```
-
-**The pipeline now automatically fixes this by:**
-1. Setting `QT_QPA_PLATFORM=offscreen`
-2. Attempting to start a virtual display (`Xvfb`)
-3. Using headless mode as fallback
-
-**Manual fix (if needed):**
-```bash
-export QT_QPA_PLATFORM=offscreen
-export DISPLAY=:0
-```
 
 ### CUDA Issues
 
 - **CUDA not available**: Use a system with NVIDIA GPU
 - **CUDA version mismatch**: Update CUDA drivers and PyTorch
-- **Memory errors**: Reduce `--dense-image-size` parameter
+- **Memory errors**: The pipeline automatically uses optimized settings
 
 ## Understanding the Results
 

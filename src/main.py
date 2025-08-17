@@ -57,14 +57,7 @@ print("COLMAP Parameters:")
 for key, value in config.colmap_params.items():
     print(f"  {key}: {value}")
 print()
-print("🚀 COLMAP pipeline configuration:")
-print("   - Feature extraction: Basic with GPU acceleration")
-print("   - Feature matching: Basic with GPU acceleration")
-print("   - Sparse reconstruction: Basic with GPU acceleration")
-print("   - Dense reconstruction: Basic with GPU acceleration")
-print("   - Stereo fusion: Basic with GPU acceleration")
-print("   - Poisson meshing: Basic with GPU acceleration")
-print()
+
 
 # Create unique run folders for each execution
 run_id = datetime.datetime.now().strftime("run_%Y%m%d_%H%M%S")
@@ -155,14 +148,6 @@ def main():
     
     # Show final status
     print("\n🚀 Pipeline completed successfully!")
-    print("   - Feature extraction: Basic with GPU acceleration")
-    print("   - Feature matching: Basic with GPU acceleration")
-    print("   - Sparse reconstruction: Basic with GPU acceleration")
-    print("   - Dense reconstruction: Basic with GPU acceleration")
-    print("   - Stereo fusion: Basic with GPU acceleration")
-    print("   - Poisson meshing: Basic with GPU acceleration")
-    print("   - GPU acceleration: ENABLED")
-    print("   - Quality maintained for 3D mapping applications")
 
 if __name__ == "__main__":
     main() 
